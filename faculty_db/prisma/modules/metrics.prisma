@@ -1,0 +1,24 @@
+model TeachingExperience {
+  ExperienceID     Int    @id @default(autoincrement())
+  FacultyID        Int
+  OrganizationName String
+  Designation      String
+  StartDate        DateTime
+  EndDate          String?
+  NatureOfWork     String?
+
+  Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
+}
+
+model CitationMetrics {
+  MetricsID      Int     @id @default(autoincrement())
+  FacultyID      Int
+  YearRecorded   Int
+  Source         String
+  HIndex         Int?
+  I10Index       Int?
+  TotalCitations Int?
+  ImpactFactor   Decimal?
+
+  Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
+}

@@ -1,0 +1,98 @@
+enum publication_type {
+  publication
+  patent
+  research_project
+}
+
+model TYPES {
+  TypeID String          @id
+  Type   publication_type
+  Status String?
+  Publications Publications[]
+}
+
+model Publications {
+  PublicationID   Int     @id @default(autoincrement())
+  TypeID          String
+  Authors         String
+  Title           String
+  PublicationYear DateTime
+  FundingAgency   String?
+
+  Type TYPES @relation(fields: [TypeID], references: [TypeID])
+  JournalPublicationDetails JournalPublicationDetails?
+  BookPublicationDetails    BookPublicationDetails?
+  ConferencePaperDetails    ConferencePaperDetails?
+  FacultyPublicationLink    FacultyPublicationLink[]
+}
+
+model JournalPublicationDetails {
+  PublicationID Int    @id
+  Name          String?
+  VolumeNumber  String?
+  IssueNumber   String?
+  ISSN_Number   Int?
+
+  Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
+}
+
+model BookPublicationDetails {
+  PublicationID Int    @id
+  Publisher     String?
+  Edition       String?
+  VolumeNumber  String?
+  ISBN_Number   String?
+
+  Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
+}
+
+model ConferencePaperDetails {
+  PublicationID Int    @id
+  Publisher     String?
+  Location      String?
+  PageNumbers   String?
+
+  Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
+}
+
+model FacultyPublicationLink {
+  PublicationID  Int
+  FacultyID      Int
+  TypeOfIndexing String?
+
+  Faculty      Faculty      @relation(fields: [FacultyID], references: [FacultyID])
+  Publication  Publications @relation(fields: [PublicationID], references: [PublicationID])
+
+  @@id([PublicationID, FacultyID])
+}
+
+model Patents {
+  TypeID     String
+  FacultyID  Int
+  Title      String
+  FilingDate DateTime
+  PublicationDate DateTime?
+  PatentNumber    String
+  Authority       String?
+  CollaborationInstitute String?
+
+  Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
+  Type    TYPES   @relation(fields: [TypeID], references: [TypeID])
+
+  @@id([TypeID, FacultyID])
+}
+
+model ResearchProjects {
+  TypeID        String
+  FacultyID     Int
+  Title         String
+  FundingAgency String?
+  StartDate     DateTime
+  EndDate       DateTime?
+  Budget        Decimal?
+
+  Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
+  Type    TYPES   @relation(fields: [TypeID], references: [TypeID])
+
+  @@id([TypeID, FacultyID])
+}
