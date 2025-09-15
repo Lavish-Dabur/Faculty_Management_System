@@ -1,0 +1,15 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Import all partial schemas
+import "./modules/core.prisma"
+import "./modules/academic.prisma"
+import "./modules/research.prisma"
+import "./modules/activities.prisma"
+import "./modules/metrics.prisma"

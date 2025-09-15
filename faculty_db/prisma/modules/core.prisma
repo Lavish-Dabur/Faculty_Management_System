@@ -1,0 +1,19 @@
+model Department {
+  DepartmentID   Int       @id @default(autoincrement())
+  DepartmentName String
+  Faculty        Faculty[]
+}
+
+model Faculty {
+  FacultyID     Int       @id @default(autoincrement())
+  FirstName     String
+  LastName      String
+  Gender        String
+  DOB           DateTime
+  Role          String
+  Phone_no      String
+  Email         String    @unique
+  DepartmentID  Int
+
+  Department    Department @relation(fields: [DepartmentID], references: [DepartmentID])
+}
