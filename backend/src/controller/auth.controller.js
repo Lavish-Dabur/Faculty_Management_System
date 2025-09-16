@@ -12,7 +12,7 @@ export const signup= async (req,res)=>{
             return res.status(400).json({message: "Password must be at least 6 characters"});
         }
 
-        const existingFaculty = await prisma.faculty.findUnique({ where: { email } });
+        const existingFaculty = await prisma.faculty.findUnique({ where: { Email:email } });
     if (existingFaculty) {
       return res.status(400).json({ message: "Email already exists" });
     }
