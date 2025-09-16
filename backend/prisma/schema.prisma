@@ -22,21 +22,23 @@ model Faculty {
   Role          String
   Phone_no      String
   Email         String    @unique
+  Password      String    // hashed password, not plain text!
   DepartmentID  Int
   Department    Department @relation(fields: [DepartmentID], references: [DepartmentID])
 
-  // 👇 back-relations
-  SubjectsTaught        SubjectTaught[]
-  Qualifications        FacultyQualification[]
-  OutreachActivities    OutReachActivities[]
-  EventsOrganised       EventsOrganised[]
-  Awards                Awards[]
-  TeachingExperiences   TeachingExperience[]
-  CitationMetrics       CitationMetrics[]
-  Publications          FacultyPublicationLink[]
-  Patents               Patents[]
-  ResearchProjects      ResearchProjects[]
+  // Relations
+  SubjectTaught             SubjectTaught[]
+  FacultyQualification      FacultyQualification[]
+  OutReachActivities        OutReachActivities[]
+  EventsOrganised           EventsOrganised[]
+  Awards                    Awards[]
+  TeachingExperience        TeachingExperience[]
+  CitationMetrics           CitationMetrics[]
+  FacultyPublicationLink    FacultyPublicationLink[]
+  Patents                   Patents[]
+  ResearchProjects          ResearchProjects[]
 }
+
 
 model SubjectTaught {
   FacultyID    Int
@@ -127,11 +129,12 @@ model TeachingExperience {
   OrganizationName String
   Designation      String
   StartDate        DateTime
-  EndDate          String?
+  EndDate          DateTime?   
   NatureOfWork     String?
 
   Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
 }
+
 
 model CitationMetrics {
   MetricsID      Int     @id @default(autoincrement())
@@ -164,17 +167,29 @@ model TYPES {
 model Publications {
   PublicationID   Int     @id @default(autoincrement())
   TypeID          String
-  Authors         String
   Title           String
   PublicationYear DateTime
   FundingAgency   String?
 
   Type TYPES @relation(fields: [TypeID], references: [TypeID])
+
   JournalPublicationDetails JournalPublicationDetails?
   BookPublicationDetails    BookPublicationDetails?
   ConferencePaperDetails    ConferencePaperDetails?
-  FacultyPublicationLink    FacultyPublicationLink[]
+  FacultyPublicationLink    FacultyPublicationLink[]  // junction
 }
+
+model FacultyPublicationLink {
+  PublicationID  Int
+  FacultyID      Int
+  TypeOfIndexing String?
+
+  Faculty     Faculty      @relation(fields: [FacultyID], references: [FacultyID])
+  Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
+
+  @@id([PublicationID, FacultyID]) // composite primary key
+}
+
 
 model JournalPublicationDetails {
   PublicationID Int    @id
@@ -203,17 +218,6 @@ model ConferencePaperDetails {
   PageNumbers   String?
 
   Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
-}
-
-model FacultyPublicationLink {
-  PublicationID  Int
-  FacultyID      Int
-  TypeOfIndexing String?
-
-  Faculty      Faculty      @relation(fields: [FacultyID], references: [FacultyID])
-  Publication  Publications @relation(fields: [PublicationID], references: [PublicationID])
-
-  @@id([PublicationID, FacultyID])
 }
 
 model Patents {
