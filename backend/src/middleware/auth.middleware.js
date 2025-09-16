@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import prisma from "../utils/db.js";
 
 export const protectRoute=async(req,res,next)=>{
     try {
@@ -14,14 +15,25 @@ export const protectRoute=async(req,res,next)=>{
             return res.status(401).json({message:"Unauthorized-Invalid Token"})
         }
 
-        const user=await User.findById(decoded.userId).select("-password");
+        const faculty = await prisma.faculty.findUnique({
+      where: { FacultyID: decoded.FacultyID },
+      select: {
+        FacultyID: true,
+        FirstName: true,
+        LastName: true,
+        Email: true,
+        Role: true,
+        
+      },
+    });
 
-        if(!user){
-            return res.status(401).json({messge:"User not found"});
-        }
-        req.user=user
+    if (!faculty) {
+      return res.status(401).json({ message: "Faculty not found" });
+    }
 
-        next()
+    req.user = faculty;
+
+    next();
 
     } catch (error) {
         console.log("Error in protectRoute middleware: ",error.message);
