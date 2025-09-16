@@ -2,16 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> f3f830cf31d67e8e258300f9067573d2d29a8b6f
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-<<<<<<< HEAD
-=======
 
 model Department {
   DepartmentID   Int       @id @default(autoincrement())
@@ -252,4 +246,3 @@ model ResearchProjects {
 
   @@id([TypeID, FacultyID])
 }
->>>>>>> f3f830cf31d67e8e258300f9067573d2d29a8b6f
