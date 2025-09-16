@@ -1,12 +1,11 @@
 import { generatetoken } from "../utils/jwt.js";
 import prisma from "../utils/db.js"
-import User from "../models/user.model.js"
 import bcrypt from "bcryptjs";
 
 export const signup= async (req,res)=>{
-    const { firstName, lastName, gender, dob, role, phone_no, email, password, departmentID } = req.body;
+    const { firstName, lastName, gender, dob, role, phone_no, email, password, departmentID ,departmentName} = req.body;
     try {
-        if (!firstName || !lastName || !gender || !dob || !role || !phone_no || !email || !password || !departmentID) {
+        if (!firstName || !lastName || !gender || !dob || !role || !phone_no || !email || !password || !departmentName) {
       return res.status(400).json({ message: "All fields are required" });
     }
         if(password.length<6){
@@ -17,9 +16,18 @@ export const signup= async (req,res)=>{
     if (existingFaculty) {
       return res.status(400).json({ message: "Email already exists" });
     }
+    let department = await prisma.department.findUnique({
+      where: { DepartmentName: departmentName },
+    });
+
+    if (!department) {
+      department = await prisma.department.create({
+        data: { DepartmentName: departmentName },
+      });
+    }
 
         const salt=await bcrypt.genSalt(10)
-        const hashedpassword=await bcrypt.hash(password,salt);
+        const hashedPassword=await bcrypt.hash(password,salt);
 
         const newFaculty = await prisma.faculty.create({
       data: {
@@ -31,6 +39,7 @@ export const signup= async (req,res)=>{
         Phone_no: phone_no,
         Email: email,
         DepartmentID: parseInt(departmentID),
+        DepartmentName: department,
         password: hashedPassword,
       }
     });
@@ -51,9 +60,57 @@ export const signup= async (req,res)=>{
         res.status(500).json({message:"Internal Server Error"});
     }
 };
-export const login=()=>{
 
+
+
+export const login= async (req,res)=>{
+    const {email,password}=req.body
+    try {
+        const faculty = await prisma.faculty.findUnique({ where: { Email: email } });
+
+        if (!faculty) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+        const isPasswordCorrect = await bcrypt.compare(password, faculty.password);
+
+        if (!isPasswordCorrect) {
+          return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        generatetoken(faculty.FacultyID, res);
+
+        res.status(200).json({
+      FacultyID: faculty.FacultyID,
+      FirstName: faculty.FirstName,
+      LastName: faculty.LastName,
+      Email: faculty.Email,
+      Role: faculty.Role,
+    });
+    } catch (error) {
+        console.log("Error in login controller",error.message);
+        res.status(500).json({message:"Internal Server Error"});
+    }
 }
-export const logout=()=>{
 
+
+export const logout=(req,res)=>{
+    try {
+        res.cookie("jwt","",{maxAge:0})
+        res.status(200).json({message:"Looged out successfully"});
+    } catch (error) {
+        console.log("Error in logout controller",error.message);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
+
+
+
+
+export const checkAuth=(req,res)=>{
+    try {
+        res.status(200).json(req.user);
+    } catch (error) {
+        console.log("Error in checkAuth controller",error.message);
+        res.status(500).json({message:"Internal Server Error"});
+    }
 }
