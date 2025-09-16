@@ -16,16 +16,7 @@ export const signup= async (req,res)=>{
     if (existingFaculty) {
       return res.status(400).json({ message: "Email already exists" });
     }
-    let department = await prisma.department.findUnique({
-      where: { DepartmentName: departmentName },
-    });
-
-    if (!department) {
-      department = await prisma.department.create({
-        data: { DepartmentName: departmentName },
-      });
-    }
-
+    
         const salt=await bcrypt.genSalt(10)
         const hashedPassword=await bcrypt.hash(password,salt);
 
@@ -38,9 +29,13 @@ export const signup= async (req,res)=>{
         Role: role,
         Phone_no: phone_no,
         Email: email,
-        DepartmentID: parseInt(departmentID),
-        DepartmentName: department,
-        password: hashedPassword,
+        Department: {
+      connectOrCreate: {
+        where: { DepartmentName: departmentName },
+        create: { DepartmentName: departmentName },
+      },
+    },
+        Password: hashedPassword,
       }
     });
 
@@ -71,7 +66,7 @@ export const login= async (req,res)=>{
         if (!faculty) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-        const isPasswordCorrect = await bcrypt.compare(password, faculty.password);
+        const isPasswordCorrect = await bcrypt.compare(password, faculty.Password);
 
         if (!isPasswordCorrect) {
           return res.status(400).json({ message: "Invalid credentials" });
