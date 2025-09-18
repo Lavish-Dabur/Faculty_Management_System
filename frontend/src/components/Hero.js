@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Hero.css'
+import search from '../assets/search.png'
+import update from '../assets/update.png'
+
 const Hero = () => {
   const navigate=useNavigate();
   return (
@@ -19,14 +22,18 @@ const Hero = () => {
             navigate('/DashBoard')
           }
           }>
-            <i className="fas fa-book"></i> 🔍 Retrieve Information
+            <i className="fas fa-book"></i> 
+            <img  src={search} className='btn-logo'></img>
+             Retrieve Information
           </button>
           <button className="hero-button update-btn"
           onClick={()=>{
             navigate('/Auth')
           }
           }>
-            <i className="fas fa-chart-bar"></i> 🔄 Update Information
+            <i className="fas fa-chart-bar"></i>
+              <img  src={update} className='btn-logo'></img>
+              Update Information
           </button>
         </div>
       </div>

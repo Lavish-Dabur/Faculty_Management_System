@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Auth from "./components/Auth.js";
 import Home from "./components/Home.js";
-
+import Navbar from "./components/Navbar temp.js";
 import bgImage from "./assets/iStock-597963404-crop.webp"
+
+
 function RetrieveInfo() {
   return ;
 }
@@ -16,7 +18,7 @@ function UpdateInfo() {
 function App() {
   return (
     <Router>
-      {/* <Navbar /> */}
+      <Navbar />
       <div className="p-6"
        style={{
         minHeight: "100vh",

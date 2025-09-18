@@ -4,6 +4,14 @@
   align-items: center;
   height: 100vh;
   background: #f8f9fa;
+  background:linear-gradient(
+      rgba(0, 0, 0, 0.4),  
+      rgba(0, 0, 0, 0.9)
+    ), url(../assets/iStock-597963404-crop.webp);
+  background-size: cover;
+  background-position: center;
+  height: "100vh";
+  z-index: -1;
 }
 
 .auth-card {

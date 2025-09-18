@@ -34,7 +34,7 @@ const Auth = () => {
     <div className="auth-container">
       <div className="auth-card">
         <h2 className="auth-title">
-          {isLogin ? "🔐 Log In" : "📝 Sign Up"}
+          {isLogin ? " Log In" : " Sign Up"}
         </h2>
         <form onSubmit={handleSubmit}>
           {!isLogin && (

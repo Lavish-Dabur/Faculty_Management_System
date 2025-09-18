@@ -1,19 +1,18 @@
 import React from 'react';
 import './Navbar.css';
-import { useNavigate } from 'react-router-dom';
+import back from "../assets/back.png"
+import {useLocation ,useNavigate } from 'react-router-dom';
 const Navbar = () => {
+  const location= useLocation();
   const navigate= useNavigate();
+
+  const isHome= location.pathname==="/";
   return (
     <nav className="navbar">
-      <div className="navbar-container">
-        <div className="navbar-title">
-          <i className="fas fa-graduation-cap"></i>
-          <span onClick={ ()=>{
-            navigate('/')
-          }}>  Faculty Data Management System</span>
-        </div>
-        
-      </div>
+      {!isHome &&<img src={back}className='nav-img'
+      onClick={()=>{
+        navigate("/");
+      }}></img>}
     </nav>
   );
 };
