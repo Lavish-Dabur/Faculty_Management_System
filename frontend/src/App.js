@@ -1,9 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar temp.js";
-import Hero from './components/Hero';
-import Features from './components/Features';
-import Footer from "./components/Footer.js";
+
+import Auth from "./components/Auth.js";
+import Home from "./components/Home.js";
+
+import bgImage from "./assets/iStock-597963404-crop.webp"
 function RetrieveInfo() {
   return ;
 }
@@ -15,16 +16,27 @@ function UpdateInfo() {
 function App() {
   return (
     <Router>
-      <Navbar />
-      <div className="p-6">
+      {/* <Navbar /> */}
+      <div className="p-6"
+       style={{
+        minHeight: "100vh",
+        backgroundImage: `linear-gradient(
+      rgba(0, 0, 0, 0.6),  
+      rgba(0, 0, 0, 0.5)
+    ),url(${bgImage})`,
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}>
         <Routes>
+          <Route path="/" element={<Home/>}/>
           <Route path="/retrieve" element={<RetrieveInfo />} />
           <Route path="/update" element={<UpdateInfo />} />
+          <Route path="/Auth" element={<Auth />} />
+
         </Routes>
       </div>
-       <Hero />
-        <Features />
-        <Footer/>
+      
     </Router>
   );
 }

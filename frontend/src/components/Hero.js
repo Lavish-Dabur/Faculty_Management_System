@@ -1,7 +1,8 @@
 import React from 'react';
-import './Hero.css';
-
+import { useNavigate } from 'react-router-dom';
+import './Hero.css'
 const Hero = () => {
+  const navigate=useNavigate();
   return (
     <div className="hero-container">
       <div className="hero-content">
@@ -13,12 +14,20 @@ const Hero = () => {
         </p>
 
         <div className="hero-buttons">
-          <a href="#" className="hero-button retrieve-btn">
+          <button  className="hero-button retrieve-btn"
+          onClick={()=>{
+            navigate('/DashBoard')
+          }
+          }>
             <i className="fas fa-book"></i> 🔍 Retrieve Information
-          </a>
-          <a href="#" className="hero-button update-btn">
+          </button>
+          <button className="hero-button update-btn"
+          onClick={()=>{
+            navigate('/Auth')
+          }
+          }>
             <i className="fas fa-chart-bar"></i> 🔄 Update Information
-          </a>
+          </button>
         </div>
       </div>
     </div>

@@ -25,16 +25,19 @@
   color: #ffffff;
   font-size: 1.6rem;
   font-weight: bold;
+  
 }
-
-/* Menu */
+.navbar-title:hover{
+   cursor: pointer;
+}
+/* Menu
 .navbar-menu {
   display: flex;
   gap: 1rem;
   list-style: none;
   margin: 0;
   padding: 0;
-}
+} */
 
 /* Links as buttons */
 .navbar-link {

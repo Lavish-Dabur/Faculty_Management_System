@@ -32,9 +32,9 @@ const Features = () => {
             <div className="feature-icon">
               <i className="fas fa-chart-line"></i>
             </div>
-            <h3 className="feature-card-title">Advanced Analytics</h3>
+            <h3 className="feature-card-title">Data Fetching</h3>
             <p className="feature-card-description">
-              Gain insights with comprehensive reports and visualizations on faculty performance.
+              Retrieve any faculty member's data with ease.
             </p>
           </div>
         </div>

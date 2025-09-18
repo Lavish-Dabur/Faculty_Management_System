@@ -1,7 +1,17 @@
 .App {
-  text-align: center;
+  /* text-align: center; */
+  /* position: fixed; */
+  
 }
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 
+  /* Fixed background */
+  background: url("./assets/iStock-597963404-crop.webp") no-repeat center center fixed;
+  background-size: cover;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;

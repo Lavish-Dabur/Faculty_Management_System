@@ -1,3 +1,6 @@
+
+
+
 /* Hero container - full screen without box appearance */
 .hero-container {
   display: flex;
@@ -12,20 +15,30 @@
 }
 
 .hero-content {
-  max-width: 800px;
+  max-width: 1000px;
   padding: 2rem;
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  color: white;
+  font-weight: bold;
+  /* padding: 0.8rem 1.5rem; */
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  font-size: 5.0rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
   line-height: 1.2;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 2px 2px 4px rgba(31, 25, 25, 0.3);
 }
 
 .hero-description {
-  font-size: 1.3rem;
+  color: white;
+  font-weight: bold;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  font-size: 1.0rem;
   line-height: 1.6;
   max-width: 600px;
   margin: 0 auto 2rem;
@@ -35,23 +48,27 @@
 .hero-buttons {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-top: 2rem;
+  gap: 2.5rem;
+  margin-top: 5rem;
+  margin-bottom: -1.5rem;
 }
 
 .hero-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  width: 300px;
+  height:90px;
   background-color: #2563eb;
   color: #ffffff;
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4), 
+              0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .hero-button:hover {
