@@ -6,6 +6,9 @@ import http from "http";
 
 import authroutes from "./routes/auth.route.js";
 import facultyroutes from "./routes/faculty.route.js"
+import facultydirectoryroutes from "./routes/facultydirectory.route.js"
+import researchroutes from "./routes/research.route.js"
+import publicationroutes from "./routes/pulication.route.js"
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +28,9 @@ app.use(cookieParser());
 
 app.use("/api/auth",authroutes)
 app.use("/api/faculty",facultyroutes)
+app.use("/api/facultydirectory",facultydirectoryroutes)
+app.use("/api/faculty/research",researchroutes)
+app.use("/api/faculty/publication",publicationroutes)
 
 server.listen(PORT,()=>{
     console.log("server is running on PORT "+PORT);
