@@ -11,7 +11,7 @@ const Navbar = () => {
     <nav className="navbar">
       {!isHome &&<img src={back}className='nav-img'
       onClick={()=>{
-        navigate("/");
+        navigate(-1);
       }}></img>}
     </nav>
   );

@@ -6,6 +6,7 @@ import Footer from "./Footer";
 import './Home.css'
 import Analytics from "./Analytics";
  export default function Home(){
+
         return (
             <div className="home-container">
                 <Hero />

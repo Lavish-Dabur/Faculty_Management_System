@@ -4,6 +4,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Auth from "./components/Auth.js";
 import Home from "./components/Home.js";
 import Navbar from "./components/Navbar temp.js";
+import Faculty_Profile from "./components/Faculty_Profile.js";
+import SearchPage from "./components/SearchPage.js";
+import DepartmentDash from "./components/DepartmentDash.js";
+import AdminDashboard from "./components/AdminDashboard.js";
 import bgImage from "./assets/iStock-597963404-crop.webp"
 
 
@@ -35,7 +39,10 @@ function App() {
           <Route path="/retrieve" element={<RetrieveInfo />} />
           <Route path="/update" element={<UpdateInfo />} />
           <Route path="/Auth" element={<Auth />} />
-
+          <Route path="/FacultyProfile" element={<Faculty_Profile/>}/>
+          <Route path="/SearchPage" element={<SearchPage/>} />
+          <Route path="/DepartmentDashboard" element={<DepartmentDash />} />
+          <Route path="/AdminDashboard" element={<AdminDashboard/>} />
         </Routes>
       </div>
       

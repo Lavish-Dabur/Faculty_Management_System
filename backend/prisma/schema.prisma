@@ -39,18 +39,16 @@ model Faculty {
   ResearchProjects          ResearchProjects[]
 }
 
-
 model SubjectTaught {
-  FacultyID    Int
-  Level        String
-  SubjectName  String
-  CourseCode   String?
-  ProgramName  String?
-  Note         String?
+  SubjectTaughtID Int    @id @default(autoincrement()) // new unique ID
+  FacultyID       Int
+  Level           String
+  SubjectName     String
+  CourseCode      String?
+  ProgramName     String?
+  Note            String?
 
   Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
-
-  @@id([FacultyID, Level, SubjectName])
 }
 
 model FacultyQualification {
@@ -95,21 +93,20 @@ enum role_type {
 }
 
 model EventsOrganised {
-  FacultyID     Int
-  Event_id      Int
-  Title         String
-  Organizer     String?
-  Location      String?
-  StartDate     DateTime?
-  EndDate       DateTime?
-  Description   String?
-  Role          role_type?
-  FundingAgency String?
+  EventOrganisedID Int @id @default(autoincrement()) // new unique ID
+  FacultyID        Int
+  Event_id         Int
+  Title            String
+  Organizer        String?
+  Location         String?
+  StartDate        DateTime?
+  EndDate          DateTime?
+  Description      String?
+  Role             role_type?
+  FundingAgency    String?
 
   Faculty Faculty   @relation(fields: [FacultyID], references: [FacultyID])
   Event   EventType @relation(fields: [Event_id], references: [EventID])
-
-  @@id([FacultyID, Event_id])
 }
 
 model Awards {
@@ -134,7 +131,6 @@ model TeachingExperience {
 
   Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
 }
-
 
 model CitationMetrics {
   MetricsID      Int     @id @default(autoincrement())
@@ -180,16 +176,14 @@ model Publications {
 }
 
 model FacultyPublicationLink {
-  PublicationID  Int
-  FacultyID      Int
+  LinkID        Int    @id @default(autoincrement()) // new unique ID
+  PublicationID Int
+  FacultyID     Int
   TypeOfIndexing String?
 
   Faculty     Faculty      @relation(fields: [FacultyID], references: [FacultyID])
   Publication Publications @relation(fields: [PublicationID], references: [PublicationID])
-
-  @@id([PublicationID, FacultyID]) // composite primary key
 }
-
 
 model JournalPublicationDetails {
   PublicationID Int    @id
@@ -221,10 +215,11 @@ model ConferencePaperDetails {
 }
 
 model Patents {
-  TypeID     String
-  FacultyID  Int
-  Title      String
-  FilingDate DateTime
+  PatentID     Int    @id @default(autoincrement()) // new unique ID
+  TypeID       String
+  FacultyID    Int
+  Title        String
+  FilingDate   DateTime
   PublicationDate DateTime?
   PatentNumber    String
   Authority       String?
@@ -232,11 +227,10 @@ model Patents {
 
   Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
   Type    TYPES   @relation(fields: [TypeID], references: [TypeID])
-
-  @@id([TypeID, FacultyID])
 }
 
 model ResearchProjects {
+  ProjectID     Int      @id @default(autoincrement()) // new unique ID
   TypeID        String
   FacultyID     Int
   Title         String
@@ -247,6 +241,4 @@ model ResearchProjects {
 
   Faculty Faculty @relation(fields: [FacultyID], references: [FacultyID])
   Type    TYPES   @relation(fields: [TypeID], references: [TypeID])
-
-  @@id([TypeID, FacultyID])
 }

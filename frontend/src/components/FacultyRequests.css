@@ -1,0 +1,41 @@
+.faculty-requests table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.faculty-requests th, td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+.faculty-requests th {
+  background-color: #111827;
+  color: white;
+}
+
+.faculty-requests tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+.approve-btn {
+  background-color: #10b981;
+  border: none;
+  padding: 6px 12px;
+  margin-right: 5px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reject-btn {
+  background-color: #ef4444;
+  border: none;
+  padding: 6px 12px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}

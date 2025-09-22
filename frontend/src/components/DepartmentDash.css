@@ -1,0 +1,120 @@
+/* Dashboard Container */
+.dashboard-container {
+  min-height: 100vh;
+  background: #f4f6f9;
+  padding: 7.5rem;
+  text-align: center;
+  background-image: url(../assets/facProfBg.png);
+}
+.dept-header{
+  display: flex;
+  margin-bottom: 1rem;
+  gap: 1.2rem;
+  align-items:center
+}
+
+
+
+/* Title */
+.dashboard-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+/* Grid Layout */
+.faculty-grid {
+  margin-top: 2.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+/* Faculty Card */
+.faculty-card {
+  background: #fff;
+  
+  padding: 25px;
+  height: fit-content;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Photo */
+.faculty-photo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 4px solid #3498db;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+/* Text */
+.faculty-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  margin: 8px 0 4px;
+}
+
+.faculty-department {
+  font-size: 0.95rem;
+  color: #777;
+  margin-bottom: 12px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 12px 0;
+}
+
+.faculty-details {
+  text-align: left;
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.faculty-details span {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Buttons */
+.faculty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.btn.primary {
+  background: #3498db;
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #2980b9;
+}
+
+.btn.secondary {
+  background: #ecf0f1;
+  color: #333;
+}
+
+.btn.secondary:hover {
+  background: #dcdde1;
+}

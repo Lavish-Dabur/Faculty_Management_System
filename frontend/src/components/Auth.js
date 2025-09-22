@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import Hero from "./Hero";
 import "./Auth.css";
+import { useNavigate } from "react-router-dom";
+
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,7 +12,8 @@ const Auth = () => {
     email: "",
     password: "",
   });
-
+  
+  const navigate =useNavigate();
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -29,8 +32,9 @@ const Auth = () => {
       // 🔗 Call backend signup API
     }
   };
-
+ 
   return (
+    
     <div className="auth-container">
       <div className="auth-card">
         <h2 className="auth-title">
@@ -69,7 +73,7 @@ const Auth = () => {
             <input
               type="email"
               name="email"
-              placeholder="Enter email"
+              placeholder="Enter email" // will it be email or uid?
               value={formData.email}
               onChange={handleChange}
               required
@@ -89,7 +93,11 @@ const Auth = () => {
           </div>
           
 
-          <button type="submit" className="auth-btn">
+          <button type="submit" className="auth-btn"
+          onClick={()=>{
+            // navigate("/FacultyProfile",{state:{prev:"auth"}});
+            navigate("/AdminDashboard");
+          }}>
             {isLogin ? "Log In" : "Sign Up"}
           </button>
         </form>
