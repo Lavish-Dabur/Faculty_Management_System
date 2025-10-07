@@ -29,6 +29,7 @@ export const signup= async (req,res)=>{
         Role: role,
         Phone_no: phone_no,
         Email: email,
+        isApproved: false,
         Department: {
       connectOrCreate: {
         where: { DepartmentName: departmentName },
@@ -48,6 +49,9 @@ export const signup= async (req,res)=>{
       LastName: newFaculty.LastName,
       Email: newFaculty.Email,
       Role: newFaculty.Role,
+    });
+    res.status(201).json({
+      message: "Signup request submitted! Please wait for admin approval."
     });
         
     } catch (error) {
@@ -71,6 +75,12 @@ export const login= async (req,res)=>{
         if (!isPasswordCorrect) {
           return res.status(400).json({ message: "Invalid credentials" });
         }
+
+        if (!faculty.isApproved) {
+      return res.status(403).json({ 
+        message: "Your account is pending admin approval."
+      });
+    }
 
         generatetoken(faculty.FacultyID, res);
 
