@@ -23,6 +23,8 @@ model Faculty {
   Phone_no      String
   Email         String    @unique
   Password      String    // hashed password, not plain text!
+  isApproved   Boolean  @default(false)
+
   DepartmentID  Int
   Department    Department @relation(fields: [DepartmentID], references: [DepartmentID])
 

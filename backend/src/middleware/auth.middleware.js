@@ -24,8 +24,8 @@ export const protectRoute = async (req, res, next) => {
       where: { FacultyID: decoded.FacultyID },
       select: { FacultyID: true }
     });
-    if (!faculty) {
-      return res.status(401).json({ message: "Unauthorized – Faculty not found" });
+    if (!faculty || !faculty.isApproved || faculty.Role !== "Admin") {
+      return res.status(401).json({ message: "Unauthorized – Admin access required" });
     }
 
     req.user = { FacultyID: faculty.FacultyID };
