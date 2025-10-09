@@ -1,14 +1,13 @@
 import prisma from "../utils/db.js";
 
+
 export const addResearchProject = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
     const { title, fundingAgency, startDate, endDate, budget, typeID } = req.body;
-
     if (!title || !startDate || !typeID) {
       return res.status(400).json({ message: "Title, startDate, and typeID are required" });
     }
-
     const project = await prisma.researchProjects.create({
       data: {
         Title: title,
@@ -16,11 +15,10 @@ export const addResearchProject = async (req, res) => {
         StartDate: new Date(startDate),
         EndDate: endDate ? new Date(endDate) : null,
         Budget: budget ? Number(budget) : null,
-        FacultyID: facultyId,  
-        TypeID: typeID,        
+        FacultyID: facultyId,
+        TypeID: typeID,
       },
     });
-
     res.status(201).json(project);
   } catch (error) {
     console.error("Error adding research project:", error.message);
@@ -28,12 +26,10 @@ export const addResearchProject = async (req, res) => {
   }
 };
 
+
 export const listResearchProjects = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    if (isNaN(facultyId)) {
-      return res.status(400).json({ message: "Invalid faculty ID" });
-    }
     const projects = await prisma.researchProjects.findMany({
       where: { FacultyID: facultyId },
       orderBy: { StartDate: "desc" },
@@ -45,32 +41,29 @@ export const listResearchProjects = async (req, res) => {
   }
 };
 
+
 export const updateResearchProject = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    const { typeID } = req.params; 
-    const { title, fundingAgency, startDate, endDate, budget } = req.body;
-
-    if (!typeID) {
-      return res.status(400).json({ message: "TypeID is required" });
-    }
+    const { projectId } = req.params;
+    const { title, fundingAgency, startDate, endDate, budget, typeID } = req.body;
 
     const existing = await prisma.researchProjects.findUnique({
-      where: { TypeID_FacultyID: { TypeID: typeID, FacultyID: facultyId } }
+      where: { ProjectID: parseInt(projectId) },
     });
-    
-    if (!existing) {
+    if (!existing || existing.FacultyID !== facultyId) {
       return res.status(404).json({ message: "Project not found" });
     }
 
     const updated = await prisma.researchProjects.update({
-      where: { TypeID_FacultyID: { TypeID: typeID, FacultyID: facultyId } },
+      where: { ProjectID: parseInt(projectId) },
       data: {
-        Title: title,
-        FundingAgency: fundingAgency,
+        Title: title ?? existing.Title,
+        FundingAgency: fundingAgency ?? existing.FundingAgency,
         StartDate: startDate ? new Date(startDate) : existing.StartDate,
-        EndDate: endDate ? new Date(endDate) : existing.EndDate,
+        EndDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.EndDate,
         Budget: budget !== undefined ? Number(budget) : existing.Budget,
+        TypeID: typeID ?? existing.TypeID,
       },
     });
 
@@ -81,22 +74,22 @@ export const updateResearchProject = async (req, res) => {
   }
 };
 
+
 export const deleteResearchProject = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    const { typeID } = req.params; 
-    
-    if (!typeID) {
-      return res.status(400).json({ message: "TypeID is required" });
-    }
+    const { projectId } = req.params;
 
-    const deleted = await prisma.researchProjects.deleteMany({
-      where: { FacultyID: facultyId, TypeID: typeID }
+    const existing = await prisma.researchProjects.findUnique({
+      where: { ProjectID: parseInt(projectId) },
     });
-
-    if (deleted.count === 0) {
-      return res.status(404).json({ message: "Project not found or not yours" });
+    if (!existing || existing.FacultyID !== facultyId) {
+      return res.status(404).json({ message: "Project not found" });
     }
+
+    await prisma.researchProjects.delete({
+      where: { ProjectID: parseInt(projectId) },
+    });
 
     res.status(200).json({ message: "Project deleted" });
   } catch (error) {

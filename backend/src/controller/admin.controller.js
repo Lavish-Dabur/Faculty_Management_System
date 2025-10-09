@@ -1,3 +1,4 @@
+import prisma from "../utils/db.js";
 export const getPendingRequests = async (req, res) => {
   try {
     const pending = await prisma.faculty.findMany({
@@ -48,6 +49,33 @@ export const rejectFaculty = async (req, res) => {
     res.status(200).json({ message: `${faculty.FirstName} ${faculty.LastName}Faculty request rejected` });
   } catch (error) {
     console.error("Error rejecting faculty:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const [
+      totalFaculty,
+      pendingApprovals,
+      totalResearch,
+      totalPublications
+    ] = await Promise.all([
+      prisma.faculty.count({ where: { isApproved: true } }),
+      prisma.faculty.count({ where: { isApproved: false } }),
+      prisma.researchProjects.count(),
+      prisma.publications.count()
+    ]);
+
+    res.status(200).json({
+      totalFaculty,
+      pendingApprovals,
+      totalResearch,
+      totalPublications
+    });
+  } catch (error) {
+    console.error("Error getting dashboard stats:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

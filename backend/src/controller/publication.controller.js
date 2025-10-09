@@ -1,25 +1,24 @@
 import prisma from "../utils/db.js";
 
-
 export const addPublication = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
     const { title, publicationYear, fundingAgency, typeID, typeOfIndexing } = req.body;
 
     if (!title || !publicationYear || !typeID) {
-      return res.status(400).json({ message: "Title, publication year, and type ID are required" });
+      return res
+        .status(400)
+        .json({ message: "Title, publicationYear, and typeID are required" });
     }
 
- 
     const publication = await prisma.publications.create({
       data: {
-        TypeID: typeID,
         Title: title,
         PublicationYear: new Date(publicationYear),
         FundingAgency: fundingAgency,
+        TypeID: typeID,
       },
     });
-
 
     const link = await prisma.facultyPublicationLink.create({
       data: {
@@ -36,18 +35,13 @@ export const addPublication = async (req, res) => {
   }
 };
 
-
 export const listPublications = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
     const publications = await prisma.facultyPublicationLink.findMany({
       where: { FacultyID: facultyId },
       include: {
-        Publication: {
-          include: {
-            Type: true,
-          },
-        },
+        Publication: { include: { Type: true } },
       },
       orderBy: { Publication: { PublicationYear: "desc" } },
     });
@@ -58,66 +52,67 @@ export const listPublications = async (req, res) => {
   }
 };
 
-
 export const updatePublication = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    const publicationId = parseInt(req.params.id, 10);
-    const { title, publicationYear, fundingAgency, typeOfIndexing } = req.body;
+    const { publicationId } = req.params;
+    const { title, publicationYear, fundingAgency, typeID, typeOfIndexing } = req.body;
 
-    if (isNaN(publicationId)) {
-      return res.status(400).json({ message: "Invalid publication ID" });
-    }
-
-  
-    const link = await prisma.facultyPublicationLink.findUnique({
-      where: { PublicationID_FacultyID: { PublicationID: publicationId, FacultyID: facultyId } },
+    const existingLink = await prisma.facultyPublicationLink.findUnique({
+      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
     });
-
-    if (!link) {
-      return res.status(404).json({ message: "Publication not found or not yours" });
+    if (!existingLink) {
+      return res.status(404).json({ message: "Publication not found" });
     }
 
-    const updated = await prisma.publications.update({
-      where: { PublicationID: publicationId },
+    const updatedPub = await prisma.publications.update({
+      where: { PublicationID: parseInt(publicationId) },
       data: {
-        Title: title,
+        Title: title ?? undefined,
         PublicationYear: publicationYear ? new Date(publicationYear) : undefined,
-        FundingAgency: fundingAgency,
+        FundingAgency: fundingAgency ?? undefined,
+        TypeID: typeID ?? undefined,
       },
     });
 
+    const updatedLink = await prisma.facultyPublicationLink.update({
+      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
+      data: {
+        TypeOfIndexing: typeOfIndexing ?? updatedLink.TypeOfIndexing,
+      },
+    });
 
-    if (typeOfIndexing !== undefined) {
-      await prisma.facultyPublicationLink.update({
-        where: { PublicationID_FacultyID: { PublicationID: publicationId, FacultyID: facultyId } },
-        data: { TypeOfIndexing: typeOfIndexing },
-      });
-    }
-
-    res.status(200).json(updated);
+    res.status(200).json({ updatedPub, updatedLink });
   } catch (error) {
     console.error("Error updating publication:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-
 export const deletePublication = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    const publicationId = parseInt(req.params.id, 10);
+    const { publicationId } = req.params;
 
-    if (isNaN(publicationId)) {
-      return res.status(400).json({ message: "Invalid publication ID" });
+    const existingLink = await prisma.facultyPublicationLink.findUnique({
+      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
+    });
+    if (!existingLink) {
+      return res.status(404).json({ message: "Publication not found" });
     }
 
-    const deleted = await prisma.facultyPublicationLink.deleteMany({
-      where: { PublicationID: publicationId, FacultyID: facultyId },
+    await prisma.facultyPublicationLink.delete({
+      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
     });
 
-    if (deleted.count === 0) {
-      return res.status(404).json({ message: "Publication not found or not yours" });
+  
+    const remainingLinks = await prisma.facultyPublicationLink.count({
+      where: { PublicationID: parseInt(publicationId) },
+    });
+    if (remainingLinks === 0) {
+      await prisma.publications.delete({
+        where: { PublicationID: parseInt(publicationId) },
+      });
     }
 
     res.status(200).json({ message: "Publication deleted" });

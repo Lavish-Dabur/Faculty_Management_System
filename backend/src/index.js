@@ -7,7 +7,6 @@ import http from "http";
 import authroutes from "./routes/auth.route.js";
 import adminRoutes from "./routes/admin.route.js";
 import facultyroutes from "./routes/faculty.route.js"
-import facultydirectoryroutes from "./routes/facultydirectory.route.js"
 import researchroutes from "./routes/research.route.js"
 import publicationroutes from "./routes/pulication.route.js"
 
@@ -34,7 +33,6 @@ app.use(cookieParser());
 app.use("/api/auth",authroutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/faculty",facultyroutes)
-app.use("/api/facultydirectory",facultydirectoryroutes)
 app.use("/api/faculty/research",researchroutes)
 app.use("/api/faculty/publication",publicationroutes)
 
