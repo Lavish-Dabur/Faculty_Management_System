@@ -19,10 +19,14 @@ dotenv.config();
 const PORT=process.env.PORT
 
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:"http://localhost:3000",
     credentials:true,
 }
 ))
+
+app.get('/test',(req, res) => {
+    res.send({ "message" : "working"})
+})
 
 app.use(express.json());
 app.use(cookieParser());
@@ -33,6 +37,9 @@ app.use("/api/faculty",facultyroutes)
 app.use("/api/facultydirectory",facultydirectoryroutes)
 app.use("/api/faculty/research",researchroutes)
 app.use("/api/faculty/publication",publicationroutes)
+
+
+
 
 server.listen(PORT,()=>{
     console.log("server is running on PORT "+PORT);

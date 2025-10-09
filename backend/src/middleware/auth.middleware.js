@@ -3,15 +3,15 @@ import prisma from "../utils/db.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
+    let token = req.cookies?.jwt || null;
 
-    let token = req.cookies.jwt;
     if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
     }
+
     if (!token) {
       return res.status(401).json({ message: "Unauthorized – No token provided" });
     }
-
 
     let decoded;
     try {
@@ -21,14 +21,27 @@ export const protectRoute = async (req, res, next) => {
     }
 
     const faculty = await prisma.faculty.findUnique({
-      where: { FacultyID: decoded.FacultyID },
-      select: { FacultyID: true }
+      where: { FacultyID: decoded.FacultyID || decoded.id },
+      select: {
+        FacultyID: true,
+        Role: true,
+        isApproved: true,
+      },
     });
-    if (!faculty || !faculty.isApproved || faculty.Role !== "Admin") {
-      return res.status(401).json({ message: "Unauthorized – Admin access required" });
+
+    if (!faculty) {
+      return res.status(401).json({ message: "Unauthorized – Faculty not found" });
     }
 
-    req.user = { FacultyID: faculty.FacultyID };
+    if (!faculty.isApproved) {
+      return res.status(403).json({ message: "Faculty not approved yet" });
+    }
+
+    if (faculty.Role !== "Admin") {
+      return res.status(403).json({ message: "Unauthorized – Admin access required" });
+    }
+
+    req.user = faculty;
     next();
   } catch (error) {
     console.error("Error in protectRoute middleware:", error.message);
