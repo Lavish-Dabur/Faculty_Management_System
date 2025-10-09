@@ -2,7 +2,7 @@ import prisma from "../utils/db.js";
 export const getPendingRequests = async (req, res) => {
   try {
     const pending = await prisma.faculty.findMany({
-      where: { isApproved: false },
+      where: { isApproved: false , Role: "Faculty"},
       select: {
         FacultyID: true,
         FirstName: true,
@@ -25,12 +25,12 @@ export const approveFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;
 
-    await prisma.faculty.update({
+    const faculty = await prisma.faculty.update({
       where: { FacultyID: parseInt(facultyId) },
       data: { isApproved: true }
     });
 
-    res.status(200).json({ message: "Faculty approved successfully" });
+    res.status(200).json({ message: `${faculty.FirstName} ${faculty.LastName}  approved successfully` });
   } catch (error) {
     console.error("Error approving faculty:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -42,11 +42,11 @@ export const rejectFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;
 
-    await prisma.faculty.delete({
+    const faculty = await prisma.faculty.delete({
       where: { FacultyID: parseInt(facultyId) }
     });
 
-    res.status(200).json({ message: "Faculty request rejected" });
+    res.status(200).json({ message: `${faculty.FirstName} ${faculty.LastName}Faculty request rejected` });
   } catch (error) {
     console.error("Error rejecting faculty:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
