@@ -8,7 +8,7 @@ router.use(protectRoute);
 
 router.post("/",addResearchProject)
 router.get("/",listResearchProjects)
-router.put("/:typeID",updateResearchProject)
-router.delete("/:typeID",deleteResearchProject)
+router.put("/:projectID",updateResearchProject)
+router.delete("/:projectID",deleteResearchProject)
 
 export default router;

@@ -46,7 +46,7 @@ export const getFacultyProfile = async (req, res) => {
 export const updateFacultyProfile = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    const { firstName, lastName, gender, dob, role, phone_no } = req.body;
+    const { firstName, lastName, gender, dob, role, phone_no} = req.body;
 
     if (!firstName || !lastName || !gender || !role || !phone_no) {
       return res.status(400).json({ message: "All required fields must be provided" });
@@ -98,8 +98,6 @@ export const getFacultyById = async (req, res) => {
     if (!id || isNaN(parseInt(id))) {
       return res.status(400).json({ message: "Invalid faculty ID" });
     }
-
-    const facultyId = parseInt(id);
 
     const faculty = await prisma.faculty.findUnique({
       where: { FacultyID: parseInt(id) },
