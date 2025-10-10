@@ -64,7 +64,9 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
+
   try {
+    console.log(email);
     const faculty = await prisma.faculty.findUnique({ where: { Email: email } });
     if (!faculty) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -96,7 +98,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
@@ -106,7 +107,6 @@ export const logout = (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 export const checkAuth = (req, res) => {
   try {

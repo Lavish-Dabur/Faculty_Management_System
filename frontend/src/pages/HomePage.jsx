@@ -1,28 +1,55 @@
 import React from 'react';
-import { Zap, Database } from 'lucide-react';
-import PrimaryButton from '../components/PrimaryButton';
+import '../styles/home.css';
 
 const CENTRAL_ILLUSTRATION = "https://placehold.co/200x200/4f46e5/ffffff?text=U+M+S";
 
 const HomePage = ({ navigate }) => (
-  <div className="text-center p-8 bg-white rounded-xl">
-    {/* <img src={CENTRAL_ILLUSTRATION} alt="UMS Logo" className="w-24 h-24 mx-auto mb-6 rounded-full shadow-lg border-4 border-indigo-100" /> */}
-    <h1 className="text-4xl font-extrabold mb-4">Faculty Research Portal</h1>
-    <p className="text-lg mb-12">Select an operation below to manage records or view data.</p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-      <div className="p-8 bg-indigo-50 border-indigo-300 rounded-xl shadow-lg">
-        <Zap className="h-8 w-8 text-indigo-700 mx-auto mb-4" />
-        <h3 className="text-2xl font-bold mb-2 text-indigo-800">Update Records</h3>
-        <PrimaryButton onClick={() => navigate('auth_gate')} color="bg-indigo-600" Icon={Zap}>
+  <div className="home-container">
+    <div className="home-header">
+      <h1 className="home-title">Faculty Data Management System</h1>
+    </div>
+    
+    <div className="home-grid">
+      <div className="home-card home-card-indigo">
+        <div className="card-icon">📝</div>
+        <h3 className="card-title">Update Records</h3>
+        <p className="card-description">Add, edit, or modify user information and records in the system.</p>
+        <button 
+          onClick={() => navigate('auth_gate')} 
+          className="card-button card-button-indigo"
+        >
           Update Information
-        </PrimaryButton>
+        </button>
       </div>
-      <div className="p-8 bg-cyan-50 border-cyan-300 rounded-xl shadow-lg">
-        <Database className="h-8 w-8 text-cyan-700 mx-auto mb-4" />
-        <h3 className="text-2xl font-bold mb-2 text-cyan-800">View Data</h3>
-        <PrimaryButton onClick={() => navigate('retrieve')} color="bg-cyan-600" Icon={Database}>
+      
+      <div className="home-card home-card-cyan">
+        <div className="card-icon">🔍</div>
+        <h3 className="card-title">View Data</h3>
+        <p className="card-description">Search, browse, and view user records and information.</p>
+        <button 
+          onClick={() => navigate('retrieve')} 
+          className="card-button card-button-cyan"
+        >
           Retrieve Information
-        </PrimaryButton>
+        </button>
+      </div>
+    </div>
+
+    <div className="home-features">
+      <div className="feature-item">
+        <div className="feature-icon">⚡</div>
+        <h4>Fast & Efficient</h4>
+        <p>Quick access to all management features</p>
+      </div>
+      <div className="feature-item">
+        <div className="feature-icon">🔒</div>
+        <h4>Secure Access</h4>
+        <p>Protected authentication system</p>
+      </div>
+      <div className="feature-item">
+        <div className="feature-icon">📊</div>
+        <h4>Comprehensive Data</h4>
+        <p>Complete user information overview</p>
       </div>
     </div>
   </div>
