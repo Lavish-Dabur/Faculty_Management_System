@@ -1,5 +1,3 @@
-// utils/exportUtils.js
-
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -40,7 +38,7 @@ async function exportAsExcel(res, data, fileName) {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Export Data');
 
-  // Add headers
+
   const headers = Object.keys(data[0]);
   worksheet.columns = headers.map(header => ({
     header: header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1'),
@@ -48,7 +46,7 @@ async function exportAsExcel(res, data, fileName) {
     width: 20
   }));
 
-  // Style headers
+
   worksheet.getRow(1).font = { bold: true };
   worksheet.getRow(1).fill = {
     type: 'pattern',
@@ -56,7 +54,7 @@ async function exportAsExcel(res, data, fileName) {
     fgColor: { argb: 'FFE0E0E0' }
   };
 
-  // Add data
+
   data.forEach(item => worksheet.addRow(item));
 
   const buffer = await workbook.xlsx.writeBuffer();

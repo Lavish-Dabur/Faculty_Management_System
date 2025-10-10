@@ -3,6 +3,7 @@ import { authAPI } from '../services/api';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
+import axios from "axios"
 
 const initial = {
   firstName: '', lastName: '', gender: '', dob: '',

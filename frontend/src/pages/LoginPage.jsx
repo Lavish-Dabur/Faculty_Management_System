@@ -3,11 +3,13 @@ import { authAPI, testConnection } from '../services/api';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
+import axios from "axios";
 
 const LoginForm = ({ navigate, onLogin }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
