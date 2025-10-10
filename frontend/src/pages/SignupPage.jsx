@@ -3,13 +3,14 @@ import { User, Users, Calendar, Phone, Mail, Key, Briefcase, Hash, Loader2, Send
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
+import axios from "axios"
 
 const initial = {
-  firstname: '', lastname: '', gender: '', dob: '',
+  firstName: '', lastName: '', gender: '', dob: '',
   phone_no: '', email: '', role: '', departmentName: '', password: ''
 };
 const genderOpts = [{value:'Male',label:'Male'}, {value:'Female',label:'Female'}, {value:'Other',label:'Other'}];
-const roleOpts = [{value:'Staff',label:'Staff'}, {value:'Manager',label:'Manager'}, {value:'Admin',label:'Admin'}, {value:'Intern',label:'Intern'}];
+const roleOpts = [{value:'Professor',label:'Professor'}, {value:'Assisstant Professor',label:'Assisstant Professor'}, {value:'Admin',label:'Admin'},];
 
 const SignupForm = ({ navigate }) => {
   const [form, setForm] = useState(initial);
@@ -31,23 +32,37 @@ const SignupForm = ({ navigate }) => {
     return errs;
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) return setErrors(errs);
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      alert('Registration successful');
-      setForm(initial);
-    }, 2000);
+     try {
+    const res = await axios.post("http://localhost:5001/api/auth/signup", form, { withCredentials: true });
+    const data = await res.json();
+    setLoading(false);
+    if (!res.ok) {
+      setErrors(data.errors || { general: data.message || "Signup failed." });
+      return;
+    }
+    alert("Registration successful");
+    setForm(initial);
+    
+  } catch (error) {
+    setLoading(false);
+    if (error.response) {
+      setErrors(error.response.data.errors || { general: error.response.data.message || "Signup failed." });
+    } else {
+      setErrors({ general: "Network error. Please try again." });
+    }
+  }
   };
 
   return (
     <FormContainer title="Create a New Account" navigate={navigate}>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormInput label="First Name" type="text" name="firstname" value={form.firstname} onChange={handleChange} error={errors.firstname} Icon={User} />
-        <FormInput label="Last Name" type="text" name="lastname" value={form.lastname} onChange={handleChange} error={errors.lastname} Icon={User} />
+  <FormInput label="First Name" type="text" name="firstName" value={form.firstName} onChange={handleChange} error={errors.firstName} Icon={User} />
+  <FormInput label="Last Name" type="text" name="lastName" value={form.lastName} onChange={handleChange} error={errors.lastName} Icon={User} />
         <FormInput label="Gender" type="select" name="gender" value={form.gender} onChange={handleChange} error={errors.gender} options={genderOpts} Icon={Users} />
         <FormInput label="Date of Birth" type="date" name="dob" value={form.dob} onChange={handleChange} error={errors.dob} Icon={Calendar} />
         <FormInput label="Phone No." type="tel" name="phone_no" value={form.phone_no} onChange={handleChange} error={errors.phone_no} Icon={Phone} />

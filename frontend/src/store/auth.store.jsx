@@ -1,6 +1,9 @@
 import React from 'react';
 import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
-import PrimaryButton from './PrimaryButton';
+import PrimaryButton from '../components/PrimaryButton';
+
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+
 
 const AuthGate = ({ navigate }) => (
   <div className="p-6 text-center">

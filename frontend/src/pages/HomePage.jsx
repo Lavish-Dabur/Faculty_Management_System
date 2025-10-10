@@ -6,8 +6,8 @@ const CENTRAL_ILLUSTRATION = "https://placehold.co/200x200/4f46e5/ffffff?text=U+
 
 const HomePage = ({ navigate }) => (
   <div className="text-center p-8 bg-white rounded-xl">
-    <img src={CENTRAL_ILLUSTRATION} alt="UMS Logo" className="w-24 h-24 mx-auto mb-6 rounded-full shadow-lg border-4 border-indigo-100" />
-    <h1 className="text-4xl font-extrabold mb-4">User Management System</h1>
+    {/* <img src={CENTRAL_ILLUSTRATION} alt="UMS Logo" className="w-24 h-24 mx-auto mb-6 rounded-full shadow-lg border-4 border-indigo-100" /> */}
+    <h1 className="text-4xl font-extrabold mb-4">Faculty Research Portal</h1>
     <p className="text-lg mb-12">Select an operation below to manage records or view data.</p>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
       <div className="p-8 bg-indigo-50 border-indigo-300 rounded-xl shadow-lg">

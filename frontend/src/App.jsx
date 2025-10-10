@@ -2,14 +2,12 @@ import React, { useState, useCallback } from 'react';
 import PrimaryButton from './components/PrimaryButton';
 import FormInput from './components/FormInput';
 import Navbar from './components/Navbar';
-import AuthGate from './components/AuthGate';
-import FormContainer from './components/FormContainer';
-import LoadingSpinner from './components/LoadingSpinner';
+import AuthGate from './store/auth.store.jsx';
+
 
 import HomePage from './pages/HomePage';
-import LoginForm from './pages/LoginForm';
-import SignupForm from './pages/SignupForm';
-import RetrievePage from './pages/RetrievePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 
 const App = () => {
   const [currentView, setCurrentView] = useState('home');
@@ -18,9 +16,8 @@ const App = () => {
   let Content;
   switch (currentView) {
     case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
-    case 'login':      Content = <LoginForm navigate={navigate} />; break;
-    case 'signup':     Content = <SignupForm navigate={navigate} />; break;
-    case 'retrieve':   Content = <RetrievePage navigate={navigate} />; break;
+  case 'login':      Content = <LoginPage navigate={navigate} />; break;
+  case 'signup':     Content = <SignupPage navigate={navigate} />; break;
     case 'home':
     default:           Content = <HomePage navigate={navigate} />; break;
   }

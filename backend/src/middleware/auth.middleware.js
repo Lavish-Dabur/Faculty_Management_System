@@ -4,27 +4,43 @@ import prisma from "../utils/db.js";
 export const protectRoute = async (req, res, next) => {
   try {
     let token = req.cookies.jwt;
+    console.log('Token from cookie:', token);
     if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
+      console.log('Token from Authorization header:', token);
     }
 
     if (!token) {
+      console.log('No token provided');
       return res.status(401).json({ message: "Unauthorized - No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded token faculty ID:", decoded.FacultyID);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Decoded token:", decoded);
+    } catch (err) {
+      console.log('JWT verification failed:', err.message);
+      return res.status(401).json({ message: "Unauthorized - Invalid token" });
+    }
+
     const faculty = await prisma.faculty.findUnique({
       where: { FacultyID: decoded.FacultyID },
       select: { FacultyID: true, isApproved: true }
     });
-    console.log("Faculty found:", faculty);
+    console.log("Faculty found in DB:", faculty);
 
-    if (!faculty || !faculty.isApproved) {
+    if (!faculty) {
+      console.log('Faculty not found for FacultyID:', decoded.FacultyID);
+      return res.status(401).json({ message: "Unauthorized - Faculty not found" });
+    }
+    if (!faculty.isApproved) {
+      console.log('Faculty not approved:', faculty);
       return res.status(401).json({ message: "Unauthorized - Account not approved" });
     }
 
     req.user = faculty;
+    console.log('req.user set in middleware:', req.user); // Debugging
     next();
   } catch (error) {
     console.error("Error in protectRoute middleware:", error.message);

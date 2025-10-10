@@ -9,6 +9,7 @@ import adminRoutes from "./routes/admin.route.js";
 import facultyroutes from "./routes/faculty.route.js"
 import researchroutes from "./routes/research.route.js"
 import publicationroutes from "./routes/pulication.route.js"
+import filterRoutes from "./routes/filter.route.js"
 
 const app = express();
 const server = http.createServer(app);
@@ -18,7 +19,7 @@ dotenv.config();
 const PORT=process.env.PORT
 
 app.use(cors({
-    origin:"http://localhost:3000",
+    origin:"http://localhost:5173",
     credentials:true,
 }
 ))
@@ -35,6 +36,7 @@ app.use("/api/admin", adminRoutes)
 app.use("/api/faculty",facultyroutes)
 app.use("/api/faculty/research",researchroutes)
 app.use("/api/faculty/publication",publicationroutes)
+app.use("/api/retreive/",filterRoutes)
 
 
 

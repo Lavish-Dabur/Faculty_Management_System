@@ -29,6 +29,10 @@ export const addResearchProject = async (req, res) => {
 
 export const listResearchProjects = async (req, res) => {
   try {
+    console.log('req.user:', req.user); // Debugging
+    if (!req.user || !req.user.FacultyID) {
+      return res.status(401).json({ message: "Unauthorized: Invalid faculty ID" });
+    }
     const facultyId = req.user.FacultyID;
     const projects = await prisma.researchProjects.findMany({
       where: { FacultyID: facultyId },
