@@ -15,6 +15,7 @@ import qualificationsRoutes from "./routes/qualifications.route.js";
 import teachingRoutes from "./routes/teaching.route.js";
 
 const app = express();
+// const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 
 dotenv.config();

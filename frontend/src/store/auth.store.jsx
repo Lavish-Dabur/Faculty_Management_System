@@ -1,25 +1,56 @@
-import React from 'react';
-import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
-import PrimaryButton from '../components/PrimaryButton';
+import { create } from 'zustand';
+import axios from '../utils/axios';
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+const useAuth = create((set) => ({
+  user: null,
+  isLoading: true,
+  error: null,
 
+  login: async (email, password) => {
+    try {
+      const response = await axios.post('/api/auth/login', { email, password });
+      set({ user: response.data.user, error: null });
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || 'Login failed' });
+      throw error;
+    }
+  },
 
-const AuthGate = ({ navigate }) => (
-  <div className="p-6 text-center">
-    <h2 className="text-3xl font-bold mb-4">Authentication Gateway</h2>
-    <div className="flex flex-col sm:flex-row gap-6 max-w-md mx-auto">
-      <PrimaryButton onClick={() => navigate('login')} color="bg-blue-600" Icon={LogIn}>
-        Login
-      </PrimaryButton>
-      <PrimaryButton onClick={() => navigate('signup')} color="bg-purple-600" Icon={UserPlus}>
-        Sign Up
-      </PrimaryButton>
-    </div>
-    <button onClick={() => navigate('home')} className="mt-10 flex items-center gap-1 text-gray-500 hover:text-indigo-600">
-      <ArrowLeft className="h-4 w-4" /> Back to Home
-    </button>
-  </div>
-);
+  signup: async (userData) => {
+    try {
+      const response = await axios.post('/api/auth/signup', userData);
+      set({ user: response.data.user, error: null });
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || 'Signup failed' });
+      throw error;
+    }
+  },
 
-export default AuthGate;
+  logout: async () => {
+    try {
+      await axios.post('/api/auth/logout');
+      set({ user: null, error: null });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  },
+
+  updateUser: (userData) => {
+    set({ user: userData });
+  },
+
+  checkAuth: async () => {
+    try {
+      const response = await axios.get('/api/auth/check');
+      set({ user: response.data.user, isLoading: false });
+    } catch (error) {
+      set({ user: null, isLoading: false });
+    }
+  },
+
+  clearError: () => set({ error: null })
+}));
+
+export { useAuth };

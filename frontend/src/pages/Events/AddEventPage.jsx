@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from '../../utils/axios';
+import FormContainer from '../../components/FormContainer';
+import FormInput from '../../components/FormInput';
+import PrimaryButton from '../../components/PrimaryButton';
+
+const AddEventPage = () => {
+    const navigate = useNavigate();
+    const [eventTypes, setEventTypes] = useState([]);
+    const [formData, setFormData] = useState({
+        title: '',
+        eventTypeId: '',
+        organizer: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        description: '',
+        role: '',
+        fundingAgency: ''
+    });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        fetchEventTypes();
+    }, []);
+
+    const fetchEventTypes = async () => {
+        try {
+            const response = await axios.get('/api/faculty/events/types');
+            setEventTypes(response.data);
+        } catch (err) {
+            setError('Failed to fetch event types');
+        }
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
+            await axios.post('/api/faculty/events', {
+                ...formData,
+                facultyId
+            });
+            navigate('/events');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to add event');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getEventTypeLabel = (eventType) => {
+        return eventType.toLowerCase()
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    };
+
+    return (
+        <FormContainer>
+            <h2 className="text-2xl font-bold text-center mb-6">Add New Event</h2>
+            
+            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <FormInput
+                    label="Event Title"
+                    name="title"
+                    type="text"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                />
+
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                        Event Type
+                    </label>
+                    <select
+                        name="eventTypeId"
+                        value={formData.eventTypeId}
+                        onChange={handleChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    >
+                        <option value="">Select Event Type</option>
+                        {eventTypes.map(type => (
+                            <option key={type.EventID} value={type.EventID}>
+                                {getEventTypeLabel(type.EventType)}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                        Your Role
+                    </label>
+                    <select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleChange}
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    >
+                        <option value="">Select Your Role</option>
+                        <option value="Speaker">Speaker</option>
+                        <option value="Organizer">Organizer</option>
+                        <option value="Attendee">Attendee</option>
+                    </select>
+                </div>
+
+                <FormInput
+                    label="Organizer"
+                    name="organizer"
+                    type="text"
+                    value={formData.organizer}
+                    onChange={handleChange}
+                />
+
+                <FormInput
+                    label="Location"
+                    name="location"
+                    type="text"
+                    value={formData.location}
+                    onChange={handleChange}
+                />
+
+                <FormInput
+                    label="Start Date"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    required
+                />
+
+                <FormInput
+                    label="End Date"
+                    name="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    min={formData.startDate}
+                />
+
+                <FormInput
+                    label="Funding Agency"
+                    name="fundingAgency"
+                    type="text"
+                    value={formData.fundingAgency}
+                    onChange={handleChange}
+                />
+
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                        Description
+                    </label>
+                    <textarea
+                        name="description"
+                        rows="4"
+                        value={formData.description}
+                        onChange={handleChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="Provide details about the event..."
+                    />
+                </div>
+
+                <div className="flex justify-between pt-4">
+                    <PrimaryButton
+                        type="button"
+                        onClick={() => navigate('/events')}
+                        className="bg-gray-500 hover:bg-gray-600"
+                    >
+                        Cancel
+                    </PrimaryButton>
+                    <PrimaryButton
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading ? 'Adding...' : 'Add Event'}
+                    </PrimaryButton>
+                </div>
+            </form>
+        </FormContainer>
+    );
+};
+
+export default AddEventPage;
