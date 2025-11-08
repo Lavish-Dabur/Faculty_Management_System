@@ -7,7 +7,7 @@ router.use(protectRoute);
 
 router.post("/", addPublication);
 router.get("/", listPublications);
-router.put("/:pulicationId", updatePublication);
+router.put("/:publicationId", updatePublication);
 router.delete("/:publicationId", deletePublication);
 
 export default router;
