@@ -48,54 +48,37 @@ export const listResearchProjects = async (req, res) => {
 
 export const updateResearchProject = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
-    const { projectId } = req.params;
+    const { projectID } = req.params;
     const { title, fundingAgency, startDate, endDate, budget, typeID } = req.body;
 
-    const existing = await prisma.researchProjects.findUnique({
-      where: { ProjectID: parseInt(projectId) },
-    });
-    if (!existing || existing.FacultyID !== facultyId) {
-      return res.status(404).json({ message: "Project not found" });
-    }
-
-    const updated = await prisma.researchProjects.update({
-      where: { ProjectID: parseInt(projectId) },
+    const updatedProject = await prisma.researchProjects.update({
+      where: { ProjectID: parseInt(projectID) },
       data: {
-        Title: title ?? existing.Title,
-        FundingAgency: fundingAgency ?? existing.FundingAgency,
-        StartDate: startDate ? new Date(startDate) : existing.StartDate,
-        EndDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.EndDate,
-        Budget: budget !== undefined ? Number(budget) : existing.Budget,
-        TypeID: typeID ?? existing.TypeID,
+        Title: title,
+        FundingAgency: fundingAgency,
+        StartDate: new Date(startDate),
+        EndDate: endDate ? new Date(endDate) : null,
+        Budget: budget ? Number(budget) : null,
+        TypeID: typeID,
       },
     });
 
-    res.status(200).json(updated);
+    res.status(200).json(updatedProject);
   } catch (error) {
     console.error("Error updating research project:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-
 export const deleteResearchProject = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
-    const { projectId } = req.params;
-
-    const existing = await prisma.researchProjects.findUnique({
-      where: { ProjectID: parseInt(projectId) },
-    });
-    if (!existing || existing.FacultyID !== facultyId) {
-      return res.status(404).json({ message: "Project not found" });
-    }
+    const { projectID } = req.params;
 
     await prisma.researchProjects.delete({
-      where: { ProjectID: parseInt(projectId) },
+      where: { ProjectID: parseInt(projectID) },
     });
 
-    res.status(200).json({ message: "Project deleted" });
+    res.status(200).json({ message: "Research project deleted successfully" });
   } catch (error) {
     console.error("Error deleting research project:", error.message);
     res.status(500).json({ message: "Internal Server Error" });

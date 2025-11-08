@@ -1,37 +1,71 @@
-import React, { useState, useCallback } from 'react';
-import PrimaryButton from './components/PrimaryButton';
-import FormInput from './components/FormInput';
-import Navbar from './components/Navbar';
-import AuthGate from './store/auth.store.jsx';
-
-
-import HomePage from './pages/HomePage';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './store/auth.store';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import PublicationsPage from './pages/Publications/PublicationsPage';
+import AddPublicationPage from './pages/Publications/AddPublicationPage';
+import ResearchProjectsPage from './pages/Research/ResearchProjectsPage';
+import AddResearchProjectPage from './pages/Research/AddResearchProjectPage';
+import PatentsPage from './pages/Patents/PatentsPage';
+import AddPatentPage from './pages/Patents/AddPatentPage';
+import TeachingExperiencePage from './pages/Teaching/TeachingExperiencePage';
+import AddTeachingExperiencePage from './pages/Teaching/AddTeachingExperiencePage';
+import AddSubjectPage from './pages/Teaching/AddSubjectPage';
+import AwardsPage from './pages/Awards/AwardsPage';
+import AddAwardPage from './pages/Awards/AddAwardPage';
+import OutreachActivitiesPage from './pages/Outreach/OutreachActivitiesPage';
+import AddOutreachActivityPage from './pages/Outreach/AddOutreachActivityPage';
+import EventsPage from './pages/Events/EventsPage';
+import AddEventPage from './pages/Events/AddEventPage';
+import QualificationsPage from './pages/Qualifications/QualificationsPage';
+import AddQualificationPage from './pages/Qualifications/AddQualificationPage';
+import CitationMetricsPage from './pages/Citations/CitationMetricsPage';
+import AddCitationMetricsPage from './pages/Citations/AddCitationMetricsPage';
+import { useAuth } from './store/auth';
 
-const App = () => {
-  const [currentView, setCurrentView] = useState('home');
-  const navigate = useCallback(view => setCurrentView(view), []);
-
-  let Content;
-  switch (currentView) {
-    case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
-  case 'login':      Content = <LoginPage navigate={navigate} />; break;
-  case 'signup':     Content = <SignupPage navigate={navigate} />; break;
-    case 'home':
-    default:           Content = <HomePage navigate={navigate} />; break;
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-cyan-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl border-4 border-white transition-all duration-300">
-        <div className="p-6 md:p-12">
-          <Navbar />
-          {Content}
-        </div>
-      </div>
-    </div>
-  );
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/login" />;
 };
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/publications" element={<ProtectedRoute><PublicationsPage /></ProtectedRoute>} />
+          <Route path="/publications/new" element={<ProtectedRoute><AddPublicationPage /></ProtectedRoute>} />
+          <Route path="/research" element={<ProtectedRoute><ResearchProjectsPage /></ProtectedRoute>} />
+          <Route path="/research/new" element={<ProtectedRoute><AddResearchProjectPage /></ProtectedRoute>} />
+          <Route path="/patents" element={<ProtectedRoute><PatentsPage /></ProtectedRoute>} />
+          <Route path="/patents/new" element={<ProtectedRoute><AddPatentPage /></ProtectedRoute>} />
+          <Route path="/teaching" element={<ProtectedRoute><TeachingExperiencePage /></ProtectedRoute>} />
+          <Route path="/teaching/new" element={<ProtectedRoute><AddTeachingExperiencePage /></ProtectedRoute>} />
+          <Route path="/teaching/subjects/new" element={<ProtectedRoute><AddSubjectPage /></ProtectedRoute>} />
+          <Route path="/awards" element={<ProtectedRoute><AwardsPage /></ProtectedRoute>} />
+          <Route path="/awards/new" element={<ProtectedRoute><AddAwardPage /></ProtectedRoute>} />
+          <Route path="/outreach" element={<ProtectedRoute><OutreachActivitiesPage /></ProtectedRoute>} />
+          <Route path="/outreach/new" element={<ProtectedRoute><AddOutreachActivityPage /></ProtectedRoute>} />
+          <Route path="/events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+          <Route path="/events/new" element={<ProtectedRoute><AddEventPage /></ProtectedRoute>} />
+          <Route path="/qualifications" element={<ProtectedRoute><QualificationsPage /></ProtectedRoute>} />
+          <Route path="/qualifications/new" element={<ProtectedRoute><AddQualificationPage /></ProtectedRoute>} />
+          <Route path="/citations" element={<ProtectedRoute><CitationMetricsPage /></ProtectedRoute>} />
+          <Route path="/citations/new" element={<ProtectedRoute><AddCitationMetricsPage /></ProtectedRoute>} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
 
 export default App;

@@ -24,6 +24,8 @@ model Faculty {
   Email         String    @unique
   Password      String    // hashed password, not plain text!
   isApproved   Boolean  @default(false)
+  passwordResetToken String?
+  passwordResetExpires DateTime?
 
   DepartmentID  Int
   Department    Department @relation(fields: [DepartmentID], references: [DepartmentID])

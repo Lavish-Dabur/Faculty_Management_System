@@ -5,6 +5,8 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 
+router.get("/profile/:facultyId", protectRoute, getFacultyProfile);
+router.put("/profile/:facultyId", protectRoute, updateFacultyProfile);
 router.get("/getfaculty", protectRoute, getFacultyProfile);
 router.put("/updatefaculty", protectRoute, updateFacultyProfile);
 

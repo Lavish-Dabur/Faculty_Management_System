@@ -54,35 +54,32 @@ export const listPublications = async (req, res) => {
 
 export const updatePublication = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
     const { publicationId } = req.params;
     const { title, publicationYear, fundingAgency, typeID, typeOfIndexing } = req.body;
 
-    const existingLink = await prisma.facultyPublicationLink.findUnique({
-      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
-    });
-    if (!existingLink) {
-      return res.status(404).json({ message: "Publication not found" });
-    }
-
-    const updatedPub = await prisma.publications.update({
+    const updatedPublication = await prisma.publications.update({
       where: { PublicationID: parseInt(publicationId) },
       data: {
-        Title: title ?? undefined,
-        PublicationYear: publicationYear ? new Date(publicationYear) : undefined,
-        FundingAgency: fundingAgency ?? undefined,
-        TypeID: typeID ?? undefined,
+        Title: title,
+        PublicationYear: new Date(publicationYear),
+        FundingAgency: fundingAgency,
+        TypeID: typeID,
       },
     });
 
     const updatedLink = await prisma.facultyPublicationLink.update({
-      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
-      data: {
-        TypeOfIndexing: typeOfIndexing ?? updatedLink.TypeOfIndexing,
-      },
+        where: { 
+            FacultyID_PublicationID: {
+                FacultyID: req.user.FacultyID,
+                PublicationID: parseInt(publicationId)
+            }
+         },
+        data: {
+            TypeOfIndexing: typeOfIndexing
+        }
     });
 
-    res.status(200).json({ updatedPub, updatedLink });
+    res.status(200).json({ updatedPublication, updatedLink });
   } catch (error) {
     console.error("Error updating publication:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -91,31 +88,22 @@ export const updatePublication = async (req, res) => {
 
 export const deletePublication = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
     const { publicationId } = req.params;
 
-    const existingLink = await prisma.facultyPublicationLink.findUnique({
-      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
-    });
-    if (!existingLink) {
-      return res.status(404).json({ message: "Publication not found" });
-    }
-
     await prisma.facultyPublicationLink.delete({
-      where: { PublicationID_FacultyID: { PublicationID: parseInt(publicationId), FacultyID: facultyId } },
+        where: { 
+            FacultyID_PublicationID: {
+                FacultyID: req.user.FacultyID,
+                PublicationID: parseInt(publicationId)
+            }
+         }
     });
 
-  
-    const remainingLinks = await prisma.facultyPublicationLink.count({
+    await prisma.publications.delete({
       where: { PublicationID: parseInt(publicationId) },
     });
-    if (remainingLinks === 0) {
-      await prisma.publications.delete({
-        where: { PublicationID: parseInt(publicationId) },
-      });
-    }
 
-    res.status(200).json({ message: "Publication deleted" });
+    res.status(200).json({ message: "Publication deleted successfully" });
   } catch (error) {
     console.error("Error deleting publication:", error.message);
     res.status(500).json({ message: "Internal Server Error" });

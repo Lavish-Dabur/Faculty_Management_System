@@ -73,3 +73,79 @@ export const ExportByName = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const filterFaculty = async (req, res) => {
+  try {
+    const { department, publicationType, researchInterests, format } = req.query;
+
+    const where = {};
+
+    if (department) {
+      where.Department = {
+        Name: {
+          contains: department,
+          mode: "insensitive",
+        },
+      };
+    }
+
+    if (publicationType) {
+      where.Publications = {
+        some: {
+          Publication: {
+            Type: {
+              Name: {
+                contains: publicationType,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      };
+    }
+
+    if (researchInterests) {
+      where.ResearchProjects = {
+        some: {
+          ResearchProject: {
+            Title: {
+              contains: researchInterests,
+              mode: "insensitive",
+            },
+          },
+        },
+      };
+    }
+
+    const faculty = await prisma.faculty.findMany({
+      where,
+      include: {
+        Department: true,
+        ResearchProjects: { include: { ResearchProject: true } },
+        Publications: { include: { Publication: { include: { Type: true } } } },
+      },
+    });
+
+    if (format) {
+      const dataToExport = faculty.map(f => ({
+        'First Name': f.FirstName,
+        'Last Name': f.LastName,
+        'Department': f.Department.Name,
+        'Email': f.Email,
+        'Phone': f.Phone,
+        'Designation': f.Designation,
+      }));
+
+      if (dataToExport.length === 0) {
+        return res.status(404).json({ message: "No faculty found for the given filters" });
+      }
+
+      return exportFilteredData(res, dataToExport, format, 'faculty_export');
+    }
+
+    res.status(200).json(faculty);
+  } catch (error) {
+    console.error("Error filtering faculty:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
