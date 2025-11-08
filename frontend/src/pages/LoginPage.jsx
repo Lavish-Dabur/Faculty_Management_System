@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Mail, Key, Loader2, LogIn } from 'lucide-react';
+import { authAPI, testConnection } from '../services/api';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
 import axios from "axios";
 
-const LoginForm = ({ navigate }) => {
+const LoginForm = ({ navigate, onLogin }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -16,47 +16,132 @@ const LoginForm = ({ navigate }) => {
     setErrors({ ...errors, [e.target.name]: '' });
   };
 
-  const validate = () => {
+  const handleSubmit = async e => {
+    e.preventDefault();
+    
+    // Basic validation
     const errs = {};
     if (!form.email) errs.email = 'Email is required.';
     if (!form.password) errs.password = 'Password is required.';
-    return errs;
-  };
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    const errs = validate();
+    
     if (Object.keys(errs).length) return setErrors(errs);
+    
     setLoading(true);
+    setErrors({});
+    
     try {
-      const res = await axios.post("http://localhost:5001/api/auth/login", form, { withCredentials: true });
-      const data = res.data;
-      setLoading(false);
-      if (data && data.token) {
-        setIsLoggedIn(true);
-      } else {
-        setErrors({ general: "Login failed. No token received." });
+      console.log('Attempting login with:', { email: form.email });
+      
+      // Test connection first
+      console.log('Testing backend connection...');
+      const isConnected = await testConnection();
+      
+      if (!isConnected) {
+        setErrors({ submit: '❌ Cannot connect to server. Please check if backend is running on port 5001.' });
+        setLoading(false);
+        return;
       }
+
+      console.log('✅ Backend connected, sending login request...');
+      
+      const response = await authAPI.login({
+        email: form.email,
+        password: form.password
+      });
+      
+      console.log('Login response:', response);
+      
+      // Handle successful login
+      if (response.data) {
+        const userData = response.data;
+        
+        // Store token if available
+        if (userData.token) {
+          localStorage.setItem('token', userData.token);
+        }
+        
+        if (onLogin) {
+          onLogin({
+            facultyId: userData.FacultyID || userData.id,
+            firstname: userData.FirstName || userData.firstname,
+            lastname: userData.LastName || userData.lastname,
+            email: userData.Email || userData.email,
+            role: userData.Role || userData.role,
+            token: userData.token
+          });
+        }
+        
+        // Navigate based on role
+        const role = userData.Role || userData.role;
+        if (role === 'Admin') {
+          navigate('admin-dashboard');
+        } else {
+          navigate('faculty-profile');
+        }
+      }
+      
     } catch (error) {
-      setLoading(false);
-      if (error.response) {
-        setErrors(error.response.data.errors || { general: error.response.data.message || "Login failed." });
+      console.error('Login error:', error);
+      
+      // More specific error messages
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error.message.includes('400')) {
+        errorMessage = 'Invalid email or password format.';
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Login endpoint not found. Check backend routes.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Server is not responding. Please try again.';
+      } else if (error.message.includes('Network error')) {
+        errorMessage = 'Cannot connect to server. Make sure backend is running.';
       } else {
-        setErrors({ general: "Network error. Please try again." });
+        errorMessage = error.message || 'Login failed. Please try again.';
       }
+      
+      setErrors({ submit: errorMessage });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <FormContainer title="Login to Your Account" navigate={navigate}>
-      {isLoggedIn && <div className="text-green-600 font-bold mb-2">Logged in successfully!</div>}
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto">
-        <FormInput label="Email Address" type="email" name="email" value={form.email} onChange={handleChange} error={errors.email} Icon={Mail} />
-        <FormInput label="Password" type="password" name="password" value={form.password} onChange={handleChange} error={errors.password} Icon={Key} />
-        <PrimaryButton type="submit" onClick={handleSubmit} Icon={loading ? Loader2 : LogIn} disabled={loading}>
-          {loading ? 'Authenticating...' : 'Sign In Securely'}
-        </PrimaryButton>
-        {errors.general && <div className="text-red-500 mt-2">{errors.general}</div>}
+      <form onSubmit={handleSubmit} className="form-grid">
+        <div className="form-full-width">
+          <FormInput 
+            label="Email Address" 
+            type="email" 
+            name="email" 
+            value={form.email} 
+            onChange={handleChange} 
+            error={errors.email} 
+          />
+        </div>
+        <div className="form-full-width">
+          <FormInput 
+            label="Password" 
+            type="password" 
+            name="password" 
+            value={form.password} 
+            onChange={handleChange} 
+            error={errors.password} 
+          />
+        </div>
+        {errors.submit && (
+          <div className="form-full-width">
+            <div className="error-message" style={{ textAlign: 'center' }}>
+              {errors.submit}
+            </div>
+          </div>
+        )}
+        <div className="form-full-width">
+          <PrimaryButton 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? 'Signing In...' : 'Sign In Securely'}
+          </PrimaryButton>
+        </div>
       </form>
     </FormContainer>
   );
