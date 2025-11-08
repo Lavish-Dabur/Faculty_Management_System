@@ -44,10 +44,10 @@ const LoginForm = ({ navigate, onLogin }) => {
 
       console.log('✅ Backend connected, sending login request...');
       
-      const response = await authAPI.login({
-        email: form.email,
-        password: form.password
-      });
+      const response = await authAPI.login(
+        form.email,
+        form.password
+      );
       
       console.log('Login response:', response);
       
