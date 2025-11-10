@@ -1,20 +1,17 @@
 import express from "express";
-<<<<<<< HEAD
-import { getPendingRequests,approveFaculty,rejectFaculty, addDepartment, getAllDepartments, updateDepartment, deleteDepartment} from "../controller/admin.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
-=======
-import { 
-  getPendingRequests, 
-  approveFaculty, 
-  rejectFaculty, 
+import {
+  getPendingRequests,
+  approveFaculty,
+  rejectFaculty,
   getDashboardStats,
   getApprovedFaculty,
   getDepartments,
   addDepartment,
+  getAllDepartments,
+  updateDepartment,
   deleteDepartment
 } from "../controller/admin.controller.js";
 import { protectAdminRoute } from "../middleware/auth.middleware.js";
->>>>>>> 473c7d5180dbebce149ceda5585ae99cb76d2f3d
 
 const router = express.Router();
 

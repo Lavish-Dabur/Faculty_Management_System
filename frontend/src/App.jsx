@@ -2,24 +2,38 @@ import React, { useState, useCallback } from 'react';
 import PrimaryButton from './components/PrimaryButton';
 import FormInput from './components/FormInput';
 import Navbar from './components/Navbar';
-import AuthGate from './store/auth.store.jsx';
+import AuthGate from './components/AuthGate.jsx';
 
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import AdminDashboard from './pages/AdminDashboard';
+import FacultyProfile from './pages/FacultyProfile';
 
 const App = () => {
   const [currentView, setCurrentView] = useState('home');
+  const [user, setUser] = useState(null);
+
   const navigate = useCallback(view => setCurrentView(view), []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    // determine view after login
+    const role = userData?.role || userData?.Role;
+    if (role === 'Admin') setCurrentView('admin-dashboard');
+    else setCurrentView('faculty-profile');
+  };
 
   let Content;
   switch (currentView) {
     case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
-  case 'login':      Content = <LoginPage navigate={navigate} />; break;
-  case 'signup':     Content = <SignupPage navigate={navigate} />; break;
+    case 'login':       Content = <LoginPage navigate={navigate} onLogin={handleLogin} />; break;
+    case 'signup':      Content = <SignupPage navigate={navigate} />; break;
+    case 'admin-dashboard': Content = <AdminDashboard user={user} navigate={navigate} />; break;
+    case 'faculty-profile': Content = <FacultyProfile user={user} navigate={navigate} />; break;
     case 'home':
-    default:           Content = <HomePage navigate={navigate} />; break;
+    default:            Content = <HomePage navigate={navigate} />; break;
   }
 
   return (

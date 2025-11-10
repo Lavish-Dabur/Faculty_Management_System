@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from '../utils/axios';
 
-const useAuth = create((set) => ({
+export const useAuth = create((set) => ({
   user: null,
   isLoading: true,
   error: null,

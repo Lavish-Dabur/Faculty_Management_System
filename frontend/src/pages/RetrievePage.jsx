@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { facultyAPI, departmentAPI } from '../services/api';
+import { facultyAPI, departmentAPI, searchAPI } from '../services/api';
 import '../styles/retrieve.css';
 
 const RetrievePage = ({ navigate }) => {
@@ -20,7 +20,27 @@ const RetrievePage = ({ navigate }) => {
 
 
   useEffect(() => {
-    filterFaculty();
+    // If there's an active search term, prefer backend search results
+    const doSearch = async () => {
+      if (searchTerm && searchTerm.trim()) {
+        try {
+          const results = await searchAPI.searchFaculty(searchTerm.trim());
+          // backend may return different shape; normalize to faculty array
+          if (Array.isArray(results)) {
+            setFilteredFaculty(results);
+          } else {
+            setFilteredFaculty([]);
+          }
+        } catch (err) {
+          console.error('Search error, falling back to client filter:', err);
+          filterFaculty();
+        }
+      } else {
+        filterFaculty();
+      }
+    };
+
+    doSearch();
   }, [searchTerm, faculty, filterType, selectedDept]);
 
   
