@@ -207,21 +207,6 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
-export const addDepartment = async (req, res) => {
-  try {
-    const { DepartmentName } = req.body;
-
-    const department = await prisma.department.create({
-      data: { DepartmentName },
-    });
-
-    res.status(201).json({ message: "Department created successfully", department });
-  } catch (error) {
-    console.error("Error creating department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
 export const getAllDepartments = async (req, res) => {
   try {
     const departments = await prisma.department.findMany();
@@ -245,21 +230,6 @@ export const updateDepartment = async (req, res) => {
     res.status(200).json({ message: "Department updated successfully", department });
   } catch (error) {
     console.error("Error updating department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-export const deleteDepartment = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    await prisma.department.delete({
-      where: { DepartmentID: parseInt(id) },
-    });
-
-    res.status(200).json({ message: "Department deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting department:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
