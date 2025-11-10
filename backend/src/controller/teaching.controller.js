@@ -1,5 +1,6 @@
 import prisma from "../utils/db.js";
 
+// Teaching Experience controllers
 export const addTeachingExperience = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
@@ -8,10 +9,22 @@ export const addTeachingExperience = async (req, res) => {
       Designation,
       StartDate,
       EndDate,
-      NatureOfWork
+      NatureOfWork,
+      organizationName,
+      designation,
+      startDate,
+      endDate,
+      natureOfWork
     } = req.body;
 
-    if (!OrganizationName || !Designation || !StartDate) {
+    // Support both naming conventions
+    const orgName = OrganizationName || organizationName;
+    const desig = Designation || designation;
+    const sDate = StartDate || startDate;
+    const eDate = EndDate || endDate;
+    const nature = NatureOfWork || natureOfWork;
+
+    if (!orgName || !desig || !sDate) {
       return res.status(400).json({ 
         message: "Organization name, designation, and start date are required" 
       });
@@ -19,12 +32,12 @@ export const addTeachingExperience = async (req, res) => {
 
     const experience = await prisma.teachingExperience.create({
       data: {
-        OrganizationName,
-        Designation,
-        StartDate: new Date(StartDate),
-        EndDate: EndDate ? new Date(EndDate) : null,
-        NatureOfWork,
-        FacultyID: facultyId
+        FacultyID: facultyId,
+        OrganizationName: orgName,
+        Designation: desig,
+        StartDate: new Date(sDate),
+        EndDate: eDate ? new Date(eDate) : null,
+        NatureOfWork: nature || null
       }
     });
 
@@ -60,7 +73,12 @@ export const updateTeachingExperience = async (req, res) => {
       Designation,
       StartDate,
       EndDate,
-      NatureOfWork
+      NatureOfWork,
+      organizationName,
+      designation,
+      startDate,
+      endDate,
+      natureOfWork
     } = req.body;
 
     const existing = await prisma.teachingExperience.findUnique({
@@ -71,14 +89,21 @@ export const updateTeachingExperience = async (req, res) => {
       return res.status(404).json({ message: "Teaching experience not found" });
     }
 
+    // Support both naming conventions
+    const orgName = OrganizationName || organizationName;
+    const desig = Designation || designation;
+    const sDate = StartDate || startDate;
+    const eDate = EndDate !== undefined ? EndDate : endDate;
+    const nature = NatureOfWork !== undefined ? NatureOfWork : natureOfWork;
+
     const updatedExperience = await prisma.teachingExperience.update({
       where: { ExperienceID: parseInt(experienceId) },
       data: {
-        OrganizationName,
-        Designation,
-        StartDate: new Date(StartDate),
-        EndDate: EndDate ? new Date(EndDate) : null,
-        NatureOfWork
+        OrganizationName: orgName || existing.OrganizationName,
+        Designation: desig || existing.Designation,
+        StartDate: sDate ? new Date(sDate) : existing.StartDate,
+        EndDate: eDate !== undefined ? (eDate ? new Date(eDate) : null) : existing.EndDate,
+        NatureOfWork: nature !== undefined ? nature : existing.NatureOfWork
       }
     });
 
@@ -120,9 +145,7 @@ export const addSubject = async (req, res) => {
     const { SubjectName, Level } = req.body;
 
     if (!SubjectName || !Level) {
-      return res.status(400).json({ 
-        message: "Subject name and level are required" 
-      });
+      return res.status(400).json({ message: "Subject name and level are required" });
     }
 
     const subject = await prisma.subjectTaught.create({
@@ -143,7 +166,6 @@ export const addSubject = async (req, res) => {
 export const listSubjects = async (req, res) => {
   try {
     const facultyId = req.user.FacultyID;
-    
     const subjects = await prisma.subjectTaught.findMany({
       where: { FacultyID: facultyId },
       orderBy: { SubjectName: "asc" }

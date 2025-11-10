@@ -7,12 +7,15 @@ const RetrievePage = () => {
   const [faculty, setFaculty] = useState([]);
   const [filteredFaculty, setFilteredFaculty] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('faculty');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
 
   useEffect(() => {
     loadFacultyData();
   }, []);
+
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -21,14 +24,24 @@ const RetrievePage = () => {
     }
 
     const searchLower = searchTerm.toLowerCase();
-    const filtered = faculty.filter(facultyMember => 
-      facultyMember.FirstName?.toLowerCase().includes(searchLower) ||
-      facultyMember.LastName?.toLowerCase().includes(searchLower) ||
-      `${facultyMember.FirstName} ${facultyMember.LastName}`.toLowerCase().includes(searchLower) ||
-      facultyMember.Email?.toLowerCase().includes(searchLower)
-    );
+    let filtered = faculty;
+
+    if (filterType === 'faculty') {
+      filtered = filtered.filter(
+        (f) =>
+          f.FirstName?.toLowerCase().includes(searchLower) ||
+          f.LastName?.toLowerCase().includes(searchLower) ||
+          `${f.FirstName} ${f.LastName}`.toLowerCase().includes(searchLower) ||
+          f.Email?.toLowerCase().includes(searchLower)
+      );
+    } else if (filterType === 'department') {
+      filtered = filtered.filter(
+        (f) => f.Department?.DepartmentName?.toLowerCase().includes(searchLower)
+      );
+    }
+
     setFilteredFaculty(filtered);
-  }, [searchTerm, faculty]);
+  }, [searchTerm, faculty, filterType]);
 
   const loadFacultyData = async () => {
     try {
@@ -104,26 +117,50 @@ const RetrievePage = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-400">🔍</span>
+        {/* 🔽 Filter Section */}
+        <div className='filter-search'>
+          <div className="filter-section">
+            <div className="filter-container">
+              {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
+              <select
+                id="filterType"
+                value={filterType}
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setSearchTerm('');
+                }}
+                className="filter-dropdown"
+              >
+        
+                <option value="faculty">Faculty Name</option>
+                <option value="department">Department</option>
+              </select>
+
+              
+            </div>
           </div>
-          <input
-            type="text"
-            placeholder="Search faculty by name or email..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
-          {searchTerm && (
-            <button 
-              onClick={handleClearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
-          )}
+
+          {/* Search Bar */}
+          <div className="relative max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-400">🔍</span>
+            </div>
+            <input
+              type="text"
+              placeholder="Search faculty by name or email..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button 
+                onClick={handleClearSearch}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         {searchTerm && (

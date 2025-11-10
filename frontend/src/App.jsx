@@ -7,62 +7,18 @@ import AuthGate from './components/AuthGate';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import DashboardPage from './pages/DashboardPage';
-import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
-import RetrievePage from './pages/RetrievePage';
 
-// Research
-import ResearchProjectsPage from './pages/Research/ResearchProjectsPage';
-import AddResearchProjectPage from './pages/Research/AddResearchProjectPage';
+const App = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const navigate = useCallback(view => setCurrentView(view), []);
 
-// Publications
-import PublicationsPage from './pages/Publications/PublicationsPage';
-import AddPublicationPage from './pages/Publications/AddPublicationPage';
-
-// Patents
-import PatentsPage from './pages/Patents/PatentsPage';
-import AddPatentPage from './pages/Patents/AddPatentPage';
-
-// Teaching
-import TeachingExperiencePage from './pages/Teaching/TeachingExperiencePage';
-import AddTeachingExperiencePage from './pages/Teaching/AddTeachingExperiencePage';
-import AddSubjectPage from './pages/Teaching/AddSubjectPage';
-
-// Awards
-import AwardsPage from './pages/Awards/AwardsPage';
-import AddAwardPage from './pages/Awards/AddAwardPage';
-
-// Outreach
-import OutreachActivitiesPage from './pages/Outreach/OutreachActivitiesPage';
-import AddOutreachActivityPage from './pages/Outreach/AddOutreachActivityPage';
-
-// Events
-import EventsPage from './pages/Events/EventsPage';
-import AddEventPage from './pages/Events/AddEventPage';
-
-// Qualifications
-import QualificationsPage from './pages/Qualifications/QualificationsPage';
-import AddQualificationPage from './pages/Qualifications/AddQualificationPage';
-
-// Citations
-import CitationMetricsPage from './pages/Citations/CitationMetricsPage';
-import AddCitationMetricsPage from './pages/Citations/AddCitationMetricsPage';
-
-function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+  let Content;
+  switch (currentView) {
+    case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
+  case 'login':      Content = <LoginPage navigate={navigate} />; break;
+  case 'signup':     Content = <SignupPage navigate={navigate} />; break;
+    case 'home':
+    default:           Content = <HomePage navigate={navigate} />; break;
   }
 
   return (

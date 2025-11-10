@@ -109,32 +109,6 @@ export const addDepartment = async (req, res) => {
   }
 };
 
-export const deleteDepartment = async (req, res) => {
-  try {
-    const { departmentId } = req.params;
-
-    // Check if department has faculty
-    const facultyCount = await prisma.faculty.count({
-      where: { DepartmentID: parseInt(departmentId) }
-    });
-
-    if (facultyCount > 0) {
-      return res.status(400).json({ 
-        message: "Cannot delete department with assigned faculty members" 
-      });
-    }
-
-    await prisma.department.delete({
-      where: { DepartmentID: parseInt(departmentId) }
-    });
-
-    res.status(200).json({ message: "Department deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
 export const approveFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;
@@ -230,6 +204,32 @@ export const updateDepartment = async (req, res) => {
     res.status(200).json({ message: "Department updated successfully", department });
   } catch (error) {
     console.error("Error updating department:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if department has faculty members
+    const facultyCount = await prisma.faculty.count({
+      where: { DepartmentID: parseInt(id) }
+    });
+
+    if (facultyCount > 0) {
+      return res.status(400).json({ 
+        message: "Cannot delete department with assigned faculty members" 
+      });
+    }
+
+    await prisma.department.delete({
+      where: { DepartmentID: parseInt(id) }
+    });
+
+    res.status(200).json({ message: "Department deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting department:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
