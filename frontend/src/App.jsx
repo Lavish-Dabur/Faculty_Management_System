@@ -3,7 +3,8 @@ import PrimaryButton from './components/PrimaryButton';
 import FormInput from './components/FormInput';
 import Navbar from './components/Navbar';
 import AuthGate from './components/AuthGate.jsx';
-
+import RetrievePage from './pages/RetrievePage';
+import ProfilePage from './pages/ProfilePage'; 
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -30,6 +31,8 @@ const App = () => {
     case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
     case 'login':       Content = <LoginPage navigate={navigate} onLogin={handleLogin} />; break;
     case 'signup':      Content = <SignupPage navigate={navigate} />; break;
+    case 'retrieve':    Content = <RetrievePage navigate={navigate} />; break;
+    // case 'profile': Content = <ProfilePage navigate={navigate} />; break;
     case 'admin-dashboard': Content = <AdminDashboard user={user} navigate={navigate} />; break;
     case 'faculty-profile': Content = <FacultyProfile user={user} navigate={navigate} />; break;
     case 'home':
