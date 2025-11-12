@@ -10,6 +10,7 @@ const RetrievePage = () => {
   const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   useEffect(() => {
     loadFacultyData();
@@ -19,6 +20,18 @@ const RetrievePage = () => {
     filterFaculty();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, faculty, filterType]);
+
+  useEffect(() => {
+    // Close export menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (showExportMenu && !event.target.closest('.export-dropdown')) {
+        setShowExportMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
 
   const loadFacultyData = async () => {
     try {
@@ -82,6 +95,94 @@ const RetrievePage = () => {
     navigate('/faculty-profile');
   };
 
+  const handleExport = async (format = 'csv') => {
+    try {
+      setLoading(true);
+      setError('');
+      setShowExportMenu(false);
+      
+      // Build query parameters based on current filters
+      const params = new URLSearchParams();
+      
+      // Add format
+      params.append('format', format);
+      
+      // Add department filter if not 'all'
+      if (filterType !== 'all' && filterType !== 'faculty') {
+        params.append('department', filterType);
+      }
+      
+      // Add search term if exists
+      if (searchTerm) {
+        params.append('name', searchTerm);
+      }
+      
+      const exportUrl = `http://localhost:5001/api/filter?${params.toString()}`;
+      console.log('Export URL:', exportUrl);
+      console.log('Export params:', { format, department: filterType, name: searchTerm });
+      
+      // Make API call to export endpoint
+      const response = await fetch(exportUrl, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf'
+        }
+      });
+      
+      console.log('Export response status:', response.status);
+      console.log('Export response type:', response.type);
+      console.log('Export response ok:', response.ok);
+      
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        console.log('Error content-type:', contentType);
+        
+        let errorData;
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json();
+        } else {
+          const text = await response.text();
+          errorData = { message: text || 'Export failed' };
+        }
+        
+        console.error('Export error data:', errorData);
+        throw new Error(errorData.message || 'Export failed');
+      }
+      
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `faculty_export_${Date.now()}.${format}`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setLoading(false);
+      
+      // Show success message
+      const formatName = format.toUpperCase();
+      alert(`✅ ${formatName} file downloaded successfully!`);
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      setError(error.message || 'Failed to export data. Please try again.');
+      setLoading(false);
+    }
+  };
 
   const getRoleClass = (role) => {
     switch (role?.toLowerCase()) {
@@ -291,14 +392,85 @@ const RetrievePage = () => {
               {searchTerm && ` • Filtered by: "${searchTerm}"`}
             </div>
             <div className="flex gap-3">
-              <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm">
-                📊 Export
-              </button>
+              {/* Export Dropdown */}
+              <div className="relative export-dropdown">
+                <button 
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  disabled={loading}
+                  className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Export
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+                
+                {/* Dropdown Menu */}
+                {showExportMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                    <button
+                      onClick={() => {
+                        handleExport('csv');
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Export as CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExport('excel');
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Export as Excel
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExport('pdf');
+                        setShowExportMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      Export as PDF
+                    </button>
+                  </div>
+                )}
+              </div>
+              
               <button 
                 onClick={loadFacultyData}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm"
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors"
               >
-                🔄 Refresh
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
               </button>
             </div>
           </div>

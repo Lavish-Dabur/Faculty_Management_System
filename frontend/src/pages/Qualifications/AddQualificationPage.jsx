@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../utils/axios';
 import FormContainer from '../../components/FormContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddQualificationPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = Boolean(id);
     const [formData, setFormData] = useState({
         degree: '',
         institution: '',
@@ -14,6 +17,30 @@ const AddQualificationPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEditMode);
+
+    useEffect(() => {
+        if (isEditMode) {
+            fetchQualificationData();
+        }
+    }, [id]);
+
+    const fetchQualificationData = async () => {
+        try {
+            const response = await axios.get(`/faculty/qualifications/single/${id}`);
+            const data = response.data;
+            setFormData({
+                degree: data.Degree || '',
+                institution: data.Institution || '',
+                yearOfCompletion: data.YearOfCompletion ? new Date(data.YearOfCompletion).getFullYear().toString() : new Date().getFullYear().toString()
+            });
+        } catch (err) {
+            setError('Failed to fetch qualification data');
+            console.error(err);
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const commonDegrees = [
         'Ph.D.',
@@ -44,14 +71,20 @@ const AddQualificationPage = () => {
 
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            await axios.post('/api/faculty/qualifications', {
+            const payload = {
                 ...formData,
                 facultyId,
                 yearOfCompletion: `${formData.yearOfCompletion}-01-01` // Convert to date format
-            });
+            };
+            
+            if (isEditMode) {
+                await axios.put(`/faculty/qualifications/${id}`, payload);
+            } else {
+                await axios.post('/faculty/qualifications', payload);
+            }
             navigate('/qualifications');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to add qualification');
+            setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} qualification`);
         } finally {
             setLoading(false);
         }
@@ -60,9 +93,18 @@ const AddQualificationPage = () => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 60 }, (_, i) => currentYear - i);
 
+    if (fetchLoading) {
+        return <FormContainer><div className="text-center">Loading...</div></FormContainer>;
+    }
+
     return (
         <FormContainer>
-            <h2 className="text-2xl font-bold text-center mb-6">Add New Qualification</h2>
+            <div className="flex items-center space-x-4 mb-6">
+                <BackButton to="/qualifications" />
+                <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Qualification' : 'Add New Qualification'}
+                </h2>
+            </div>
             
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
@@ -124,7 +166,7 @@ const AddQualificationPage = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? 'Adding...' : 'Add Qualification'}
+                        {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Qualification' : 'Add Qualification')}
                     </PrimaryButton>
                 </div>
             </form>

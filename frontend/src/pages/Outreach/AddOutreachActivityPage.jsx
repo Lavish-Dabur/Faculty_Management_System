@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../utils/axios';
 import FormContainer from '../../components/FormContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddOutreachActivityPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = Boolean(id);
     const [formData, setFormData] = useState({
         activityTitle: '',
         activityType: '',
@@ -16,6 +19,32 @@ const AddOutreachActivityPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEditMode);
+
+    useEffect(() => {
+        if (isEditMode) {
+            fetchOutreachData();
+        }
+    }, [id]);
+
+    const fetchOutreachData = async () => {
+        try {
+            const response = await axios.get(`/faculty/outreach/single/${id}`);
+            const data = response.data;
+            setFormData({
+                activityTitle: data.ActivityTitle || '',
+                activityType: data.ActivityType || '',
+                institutionName: data.InstitutionName || '',
+                activityDate: data.ActivityDate ? data.ActivityDate.split('T')[0] : new Date().toISOString().split('T')[0],
+                description: data.Description || ''
+            });
+        } catch (err) {
+            setError('Failed to fetch outreach activity data');
+            console.error(err);
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const activityTypes = [
         'Community Service',
@@ -42,21 +71,41 @@ const AddOutreachActivityPage = () => {
 
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            await axios.post('/api/faculty/outreach', {
-                ...formData,
-                facultyId
-            });
+            if (isEditMode) {
+                await axios.put(`/faculty/outreach/${id}`, {
+                    ...formData,
+                    facultyId
+                });
+            } else {
+                await axios.post('/faculty/outreach', {
+                    ...formData,
+                    facultyId
+                });
+            }
             navigate('/outreach');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to add outreach activity');
+            setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} outreach activity`);
         } finally {
             setLoading(false);
         }
     };
 
+    if (fetchLoading) {
+        return (
+            <FormContainer>
+                <div className="text-center">Loading...</div>
+            </FormContainer>
+        );
+    }
+
     return (
         <FormContainer>
-            <h2 className="text-2xl font-bold text-center mb-6">Add New Outreach Activity</h2>
+            <div className="flex items-center space-x-4 mb-6">
+                <BackButton to="/outreach" />
+                <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Outreach Activity' : 'Add New Outreach Activity'}
+                </h2>
+            </div>
             
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
@@ -131,7 +180,7 @@ const AddOutreachActivityPage = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? 'Adding...' : 'Add Activity'}
+                        {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Activity' : 'Add Activity')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../utils/axios';
 import FormContainer from '../../components/FormContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddCitationMetricsPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = Boolean(id);
     const [formData, setFormData] = useState({
         source: '',
         yearRecorded: new Date().getFullYear(),
@@ -16,6 +19,32 @@ const AddCitationMetricsPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEditMode);
+
+    useEffect(() => {
+        if (isEditMode) {
+            fetchCitationData();
+        }
+    }, [id]);
+
+    const fetchCitationData = async () => {
+        try {
+            const response = await axios.get(`/faculty/citations/single/${id}`);
+            const data = response.data;
+            setFormData({
+                source: data.Source || '',
+                yearRecorded: data.YearRecorded || new Date().getFullYear(),
+                hIndex: data.hIndex || '',
+                i10Index: data.i10Index || '',
+                totalCitations: data.TotalCitations || ''
+            });
+        } catch (err) {
+            setError('Failed to fetch citation metrics data');
+            console.error(err);
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const citationSources = [
         'Google Scholar',
@@ -39,13 +68,20 @@ const AddCitationMetricsPage = () => {
 
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            await axios.post('/api/faculty/citations', {
-                ...formData,
-                facultyId
-            });
+            if (isEditMode) {
+                await axios.put(`/faculty/citations/${id}`, {
+                    ...formData,
+                    facultyId
+                });
+            } else {
+                await axios.post('/faculty/citations', {
+                    ...formData,
+                    facultyId
+                });
+            }
             navigate('/citations');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to add citation metrics');
+            setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} citation metrics`);
         } finally {
             setLoading(false);
         }
@@ -54,9 +90,22 @@ const AddCitationMetricsPage = () => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
 
+    if (fetchLoading) {
+        return (
+            <FormContainer>
+                <div className="text-center">Loading...</div>
+            </FormContainer>
+        );
+    }
+
     return (
         <FormContainer>
-            <h2 className="text-2xl font-bold text-center mb-6">Add New Citation Metrics</h2>
+            <div className="flex items-center space-x-4 mb-6">
+                <BackButton to="/citations" />
+                <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Citation Metrics' : 'Add New Citation Metrics'}
+                </h2>
+            </div>
             
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
@@ -138,7 +187,7 @@ const AddCitationMetricsPage = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? 'Adding...' : 'Add Metrics'}
+                        {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Metrics' : 'Add Metrics')}
                     </PrimaryButton>
                 </div>
             </form>

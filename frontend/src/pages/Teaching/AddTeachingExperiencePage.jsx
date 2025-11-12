@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../store/auth.store';
 import axios from '../../utils/axios';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddTeachingExperiencePage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditMode);
   const [error, setError] = useState('');
 
   const [experience, setExperience] = useState({
@@ -18,6 +22,31 @@ const AddTeachingExperiencePage = () => {
     EndDate: '',
     NatureOfWork: ''
   });
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchTeachingData();
+    }
+  }, [id]);
+
+  const fetchTeachingData = async () => {
+    try {
+      const response = await axios.get(`/faculty/teaching/single/${id}`);
+      const data = response.data;
+      setExperience({
+        OrganizationName: data.OrganizationName || '',
+        Designation: data.Designation || '',
+        StartDate: data.StartDate ? data.StartDate.split('T')[0] : '',
+        EndDate: data.EndDate ? data.EndDate.split('T')[0] : '',
+        NatureOfWork: data.NatureOfWork || ''
+      });
+    } catch (err) {
+      setError('Failed to fetch teaching experience data');
+      console.error(err);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,20 +67,39 @@ const AddTeachingExperiencePage = () => {
         EndDate: experience.EndDate || null,
       };
 
-      await axios.post(`/api/faculty/teaching/${user.FacultyID}`, formData);
+      if (isEditMode) {
+        await axios.put(`/faculty/teaching/${id}`, formData);
+      } else {
+        await axios.post(`/faculty/teaching/${user.FacultyID}`, formData);
+      }
       navigate('/teaching');
     } catch (error) {
-      console.error('Error adding teaching experience:', error);
-      setError(error.response?.data?.message || 'Failed to add teaching experience');
+      console.error('Error saving teaching experience:', error);
+      setError(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} teaching experience`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Add Teaching Experience</h1>
+        <div className="flex items-center space-x-4 mb-6">
+          <BackButton to="/teaching" />
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? 'Edit Teaching Experience' : 'Add Teaching Experience'}
+          </h1>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
@@ -122,7 +170,7 @@ const AddTeachingExperiencePage = () => {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save Experience'}
+              {loading ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Experience' : 'Save Experience')}
             </PrimaryButton>
           </div>
         </form>

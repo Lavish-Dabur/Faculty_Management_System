@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.store';
 import axios from '../utils/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -7,6 +8,7 @@ import PrimaryButton from '../components/PrimaryButton';
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -16,11 +18,24 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`/api/faculty/profile/${user?.FacultyID}`);
+        console.log('Fetching profile for user:', user);
+        
+        if (!user?.FacultyID) {
+          console.error('No FacultyID found in user object');
+          setError('User not logged in or FacultyID missing');
+          setLoading(false);
+          return;
+        }
+
+        console.log('Making request to:', `/faculty/profile/${user.FacultyID}`);
+        const response = await axios.get(`/faculty/profile/${user.FacultyID}`);
+        console.log('Profile response:', response.data);
         setProfile(response.data);
+        setError('');
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setError('Failed to load profile data');
+        console.error('Error response:', error.response?.data);
+        setError(error.response?.data?.message || 'Failed to load profile data');
       } finally {
         setLoading(false);
       }
@@ -28,6 +43,10 @@ const ProfilePage = () => {
 
     if (user?.FacultyID) {
       fetchProfile();
+    } else {
+      console.error('User or FacultyID is missing:', user);
+      setError('Please login to view your profile');
+      setLoading(false);
     }
   }, [user]);
 
@@ -46,7 +65,7 @@ const ProfilePage = () => {
     setSuccess('');
 
     try {
-      const response = await axios.put(`/api/faculty/profile/${user?.FacultyID}`, profile);
+      const response = await axios.put(`/faculty/profile/${user?.FacultyID}`, profile);
       updateUser(response.data);
       setSuccess('Profile updated successfully');
     } catch (error) {
@@ -64,7 +83,18 @@ const ProfilePage = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Profile Information</h1>
+        <div className="flex items-center space-x-4 mb-6">
+          <button
+            onClick={() => navigate(user?.Role === 'Admin' ? '/admin' : '/dashboard')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200 text-gray-700"
+            title="Back to Dashboard"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-bold">Profile Information</h1>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">

@@ -4,23 +4,19 @@ import prisma from "../utils/db.js";
 export const protectRoute = async (req, res, next) => {
   try {
     let token = req.cookies.jwt;
-    console.log('Token from cookie:', token);
+    
     if (!token && req.headers.authorization?.startsWith("Bearer ")) {
       token = req.headers.authorization.split(" ")[1];
-      console.log('Token from Authorization header:', token);
     }
 
     if (!token) {
-      console.log('No token provided');
       return res.status(401).json({ message: "Unauthorized - No token provided" });
     }
 
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Decoded token:", decoded);
     } catch (err) {
-      console.log('JWT verification failed:', err.message);
       return res.status(401).json({ message: "Unauthorized - Invalid token" });
     }
 

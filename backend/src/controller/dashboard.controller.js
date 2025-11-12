@@ -10,15 +10,15 @@ export const getDashboardStats = async (req, res) => {
       researchCount,
       patentCount,
       citationMetrics,
+      recentPublications,
+      recentResearch,
+      recentPatents,
       teachingExperience,
       qualifications,
       awards,
       events,
       outreachActivities,
       subjectsTaught,
-      recentPublications,
-      recentResearch,
-      recentPatents,
       recentAwards,
       recentEvents
     ] = await Promise.all([

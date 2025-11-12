@@ -4,6 +4,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../store/auth.store';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const TeachingExperiencePage = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const TeachingExperiencePage = () => {
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        const response = await axios.get(`/api/faculty/teaching/${user?.FacultyID}`);
+        const response = await axios.get(`/faculty/teaching/${user?.FacultyID}`);
         setExperiences(response.data);
       } catch (error) {
         console.error('Error fetching teaching experiences:', error);
@@ -34,7 +35,10 @@ const TeachingExperiencePage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Teaching Experience</h1>
+        <div className="flex items-center space-x-4">
+          <BackButton to="/dashboard" />
+          <h1 className="text-2xl font-bold">Teaching Experience</h1>
+        </div>
         <Link to="/teaching/new">
           <PrimaryButton>Add Teaching Experience</PrimaryButton>
         </Link>
@@ -135,7 +139,7 @@ const SubjectsTaughtSection = ({ facultyId }) => {
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
-        const response = await axios.get(`/api/faculty/subjects/${facultyId}`);
+        const response = await axios.get(`/faculty/subjects/${facultyId}`);
         setSubjects(response.data);
       } catch (error) {
         console.error('Error fetching subjects:', error);

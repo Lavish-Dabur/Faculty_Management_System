@@ -4,6 +4,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../store/auth.store';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const PublicationsPage = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const PublicationsPage = () => {
   useEffect(() => {
     const fetchPublications = async () => {
       try {
-        const response = await axios.get(`/api/faculty/publication/${user?.FacultyID}`);
+        const response = await axios.get(`/faculty/publication/${user?.FacultyID}`);
         setPublications(response.data);
       } catch (error) {
         console.error('Error fetching publications:', error);
@@ -34,7 +35,10 @@ const PublicationsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Publications</h1>
+        <div className="flex items-center space-x-4">
+          <BackButton to="/dashboard" />
+          <h1 className="text-2xl font-bold">Publications</h1>
+        </div>
         <Link to="/publications/new">
           <PrimaryButton>Add Publication</PrimaryButton>
         </Link>

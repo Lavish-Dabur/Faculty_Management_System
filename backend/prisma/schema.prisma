@@ -27,8 +27,8 @@ model Faculty {
   passwordResetToken String?
   passwordResetExpires DateTime?
 
-  DepartmentID  Int
-  Department    Department @relation(fields: [DepartmentID], references: [DepartmentID])
+  DepartmentID  Int?
+  Department    Department? @relation(fields: [DepartmentID], references: [DepartmentID])
 
   // Relations
   SubjectTaught             SubjectTaught[]

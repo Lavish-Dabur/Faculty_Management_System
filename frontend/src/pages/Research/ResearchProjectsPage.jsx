@@ -4,6 +4,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../store/auth.store';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const ResearchProjectsPage = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const ResearchProjectsPage = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get(`/api/faculty/research/${user?.FacultyID}`);
+        const response = await axios.get(`/faculty/research/${user?.FacultyID}`);
         setProjects(response.data);
       } catch (error) {
         console.error('Error fetching research projects:', error);
@@ -34,7 +35,10 @@ const ResearchProjectsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Research Projects</h1>
+        <div className="flex items-center space-x-4">
+          <BackButton to="/dashboard" />
+          <h1 className="text-2xl font-bold">Research Projects</h1>
+        </div>
         <Link to="/research/new">
           <PrimaryButton>Add Research Project</PrimaryButton>
         </Link>

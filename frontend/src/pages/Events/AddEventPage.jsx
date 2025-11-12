@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../utils/axios';
 import FormContainer from '../../components/FormContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddEventPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = Boolean(id);
     const [eventTypes, setEventTypes] = useState([]);
     const [formData, setFormData] = useState({
         title: '',
@@ -21,14 +24,41 @@ const AddEventPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEditMode);
 
     useEffect(() => {
         fetchEventTypes();
-    }, []);
+        if (isEditMode) {
+            fetchEventData();
+        }
+    }, [id]);
+
+    const fetchEventData = async () => {
+        try {
+            const response = await axios.get(`/faculty/events/single/${id}`);
+            const data = response.data;
+            setFormData({
+                title: data.Title || '',
+                eventTypeId: data.EventTypeID || '',
+                organizer: data.Organizer || '',
+                location: data.Location || '',
+                startDate: data.StartDate ? data.StartDate.split('T')[0] : '',
+                endDate: data.EndDate ? data.EndDate.split('T')[0] : '',
+                description: data.Description || '',
+                role: data.Role || '',
+                fundingAgency: data.FundingAgency || ''
+            });
+        } catch (err) {
+            setError('Failed to fetch event data');
+            console.error(err);
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const fetchEventTypes = async () => {
         try {
-            const response = await axios.get('/api/faculty/events/types');
+            const response = await axios.get('/faculty/events/types');
             setEventTypes(response.data);
         } catch (err) {
             setError('Failed to fetch event types');
@@ -50,13 +80,20 @@ const AddEventPage = () => {
 
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            await axios.post('/api/faculty/events', {
-                ...formData,
-                facultyId
-            });
+            if (isEditMode) {
+                await axios.put(`/faculty/events/${id}`, {
+                    ...formData,
+                    facultyId
+                });
+            } else {
+                await axios.post('/faculty/events', {
+                    ...formData,
+                    facultyId
+                });
+            }
             navigate('/events');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to add event');
+            setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} event`);
         } finally {
             setLoading(false);
         }
@@ -69,9 +106,22 @@ const AddEventPage = () => {
             .join(' ');
     };
 
+    if (fetchLoading) {
+        return (
+            <FormContainer>
+                <div className="text-center">Loading...</div>
+            </FormContainer>
+        );
+    }
+
     return (
         <FormContainer>
-            <h2 className="text-2xl font-bold text-center mb-6">Add New Event</h2>
+            <div className="flex items-center space-x-4 mb-6">
+                <BackButton to="/events" />
+                <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Event' : 'Add New Event'}
+                </h2>
+            </div>
             
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
@@ -191,7 +241,7 @@ const AddEventPage = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? 'Adding...' : 'Add Event'}
+                        {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Event' : 'Add Event')}
                     </PrimaryButton>
                 </div>
             </form>

@@ -1,43 +1,34 @@
-import React, { useState } from 'react';
-import PrimaryButton from './PrimaryButton';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../store/auth.store';
 
-const AuthGate = ({ navigate }) => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthGate = ({ children, requireAdmin = false }) => {
+  const { user, isLoading } = useAuth();
 
-  return (
-    <div className="auth-gate-container">
-      <button 
-        onClick={() => navigate('home')}
-        className="back-button"
-        style={{ marginBottom: '2rem' }}
-      >
-        ← Back 
-      </button>
-      
-      <h1 className="auth-gate-title">
-        {isLogin ? 'Welcome Back' : 'Create Account'}
-      </h1>
-      <p className="auth-gate-subtitle">
-        {isLogin ? 'Sign in to update records' : 'Register for a new account'}
-      </p>
-
-      <div className="auth-options">
-        <PrimaryButton 
-          onClick={() => navigate(isLogin ? 'login' : 'signup')} 
-          color={isLogin ? "bg-indigo-600" : "bg-green-600"}
-        >
-          {isLogin ? 'Proceed to Login' : 'Proceed to Sign Up'}
-        </PrimaryButton>
-        
-        <button 
-          onClick={() => setIsLogin(!isLogin)}
-          className="toggle-auth"
-        >
-          {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-        </button>
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // Not logged in - redirect to login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check admin requirement
+  if (requireAdmin && user.Role !== 'Admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // User is authenticated, render children
+  return <>{children}</>;
 };
 
 export default AuthGate;

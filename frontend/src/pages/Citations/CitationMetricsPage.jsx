@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const CitationMetricsPage = () => {
     const [metrics, setMetrics] = useState([]);
@@ -17,7 +18,7 @@ const CitationMetricsPage = () => {
     const fetchMetrics = async () => {
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            const response = await axios.get(`/api/faculty/citations/${facultyId}`);
+            const response = await axios.get(`/faculty/citations/${facultyId}`);
             setMetrics(response.data);
             setLoading(false);
         } catch {
@@ -26,11 +27,11 @@ const CitationMetricsPage = () => {
         }
     };
 
-    const handleDelete = async (metricsId) => {
-        if (window.confirm('Are you sure you want to delete these citation metrics?')) {
+    const handleDelete = async (metricId) => {
+        if (window.confirm('Are you sure you want to delete this citation metric?')) {
             try {
-                await axios.delete(`/api/faculty/citations/${metricsId}`);
-                setMetrics(metrics.filter(m => m.MetricsID !== metricsId));
+                await axios.delete(`/faculty/citations/${metricId}`);
+                setMetrics(metrics.filter(m => m.MetricsID !== metricId));
             } catch {
                 setError('Failed to delete citation metrics');
             }
@@ -77,7 +78,10 @@ const CitationMetricsPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Citation Metrics</h1>
+                <div className="flex items-center space-x-4">
+                    <BackButton to="/dashboard" />
+                    <h1 className="text-2xl font-bold text-gray-800">Citation Metrics</h1>
+                </div>
                 <PrimaryButton
                     onClick={() => navigate('/citations/new')}
                     className="px-4 py-2"

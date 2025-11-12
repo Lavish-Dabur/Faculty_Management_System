@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const EventsPage = () => {
     const [events, setEvents] = useState([]);
@@ -17,7 +18,7 @@ const EventsPage = () => {
     const fetchEvents = async () => {
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            const response = await axios.get(`/api/faculty/events/${facultyId}`);
+            const response = await axios.get(`/faculty/events/${facultyId}`);
             setEvents(response.data);
             setLoading(false);
         } catch (err) {
@@ -29,7 +30,7 @@ const EventsPage = () => {
     const handleDelete = async (eventId) => {
         if (window.confirm('Are you sure you want to delete this event?')) {
             try {
-                await axios.delete(`/api/faculty/events/${eventId}`);
+                await axios.delete(`/faculty/events/${eventId}`);
                 setEvents(events.filter(event => event.EventOrganisedID !== eventId));
             } catch (err) {
                 setError('Failed to delete event');
@@ -72,7 +73,10 @@ const EventsPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Events</h1>
+                <div className="flex items-center space-x-4">
+                    <BackButton to="/dashboard" />
+                    <h1 className="text-2xl font-bold text-gray-800">Events</h1>
+                </div>
                 <PrimaryButton
                     onClick={() => navigate('/events/new')}
                     className="px-4 py-2"
