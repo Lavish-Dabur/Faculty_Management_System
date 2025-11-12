@@ -156,13 +156,14 @@ router.get("/outreach/:FacultyID", protectRoute, getFacultyOutreachActivities);
 router.post("/outreach", protectRoute, addOutreachActivity);
 router.get("/outreach/single/:activityId", protectRoute, async (req, res) => {
   try {
-    const activity = await prisma.outreachActivities.findUnique({
+    const activity = await prisma.outReachActivities.findUnique({
       where: { ActivityID: parseInt(req.params.activityId) }
     });
     if (!activity) return res.status(404).json({ message: "Outreach activity not found" });
     res.json(activity);
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error('Error fetching single outreach activity:', error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
 router.put("/outreach/:activityId", protectRoute, updateOutreachActivity);

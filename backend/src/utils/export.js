@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export const exportFilteredData = async (res, data, format, fileName) => {
   try {
@@ -89,26 +89,51 @@ async function exportAsExcel(res, data, fileName) {
 }
 
 function exportAsPDF(res, data, fileName) {
-  const doc = new jsPDF();
-  
-  doc.setFontSize(16);
-  doc.text('Export Report', 20, 20);
-  doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+  try {
+    console.log('exportAsPDF started with data length:', data.length);
+    console.log('Creating jsPDF instance...');
+    
+    const doc = new jsPDF();
+    
+    console.log('Adding header text...');
+    doc.setFontSize(16);
+    doc.text('Faculty Export Report', 20, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 30);
+    doc.text(`Total Records: ${data.length}`, 20, 37);
 
-  const headers = Object.keys(data[0]);
-  const tableData = data.map(item => headers.map(header => item[header] || ''));
+    console.log('Preparing table data...');
+    const headers = Object.keys(data[0]);
+    console.log('Headers:', headers);
+    
+    const tableData = data.map(item => headers.map(header => String(item[header] || '')));
+    console.log('Table rows:', tableData.length);
 
-  doc.autoTable({
-    head: [headers.map(h => h.charAt(0).toUpperCase() + h.slice(1))],
-    body: tableData,
-    startY: 40,
-    styles: { fontSize: 8 }
-  });
+    console.log('Adding autoTable...');
+    autoTable(doc, {
+      head: [headers.map(h => h.charAt(0).toUpperCase() + h.slice(1).replace(/([A-Z])/g, ' $1').trim())],
+      body: tableData,
+      startY: 45,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [79, 70, 229], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    });
 
-  const pdfBuffer = doc.output();
-  
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
-  res.send(Buffer.from(pdfBuffer, 'binary'));
+    console.log('Generating PDF buffer...');
+    const pdfBuffer = doc.output('arraybuffer');
+    console.log('PDF buffer size:', pdfBuffer.byteLength);
+    
+    console.log('Setting response headers...');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.byteLength);
+    
+    console.log('Sending PDF response...');
+    res.send(Buffer.from(pdfBuffer));
+    console.log('PDF sent successfully');
+  } catch (error) {
+    console.error('Error in exportAsPDF:', error);
+    console.error('Error stack:', error.stack);
+    throw error;
+  }
 }
