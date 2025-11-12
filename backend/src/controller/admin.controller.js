@@ -75,40 +75,6 @@ export const getDepartments = async (req, res) => {
   }
 };
 
-export const addDepartment = async (req, res) => {
-  try {
-    const { departmentName } = req.body;
-
-    if (!departmentName) {
-      return res.status(400).json({ message: "Department name is required" });
-    }
-
-    const existingDepartment = await prisma.department.findUnique({
-      where: { DepartmentName: departmentName }
-    });
-
-    if (existingDepartment) {
-      return res.status(400).json({ message: "Department already exists" });
-    }
-
-    const department = await prisma.department.create({
-      data: { DepartmentName: departmentName }
-    });
-
-    res.status(201).json({
-      message: "Department created successfully",
-      department: {
-        DepartmentID: department.DepartmentID,
-        DepartmentName: department.DepartmentName,
-        facultyCount: 0
-      }
-    });
-  } catch (error) {
-    console.error("Error adding department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
 export const approveFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;
@@ -177,6 +143,21 @@ export const getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting dashboard stats:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const addDepartment = async (req, res) => {
+  try {
+    const { DepartmentName } = req.body;
+
+    const department = await prisma.department.create({
+      data: { DepartmentName },
+    });
+
+    res.status(201).json({ message: "Department created successfully", department });
+  } catch (error) {
+    console.error("Error creating department:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

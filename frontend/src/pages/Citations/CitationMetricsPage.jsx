@@ -3,16 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer
-} from 'recharts';
 
 const CitationMetricsPage = () => {
     const [metrics, setMetrics] = useState([]);
@@ -30,7 +20,7 @@ const CitationMetricsPage = () => {
             const response = await axios.get(`/api/faculty/citations/${facultyId}`);
             setMetrics(response.data);
             setLoading(false);
-        } catch (err) {
+        } catch {
             setError('Failed to fetch citation metrics');
             setLoading(false);
         }
@@ -41,7 +31,7 @@ const CitationMetricsPage = () => {
             try {
                 await axios.delete(`/api/faculty/citations/${metricsId}`);
                 setMetrics(metrics.filter(m => m.MetricsID !== metricsId));
-            } catch (err) {
+            } catch {
                 setError('Failed to delete citation metrics');
             }
         }
@@ -60,36 +50,29 @@ const CitationMetricsPage = () => {
         }
     };
 
-    const prepareChartData = () => {
-        // Group metrics by year and source
-        const groupedData = {};
+    const getTotalsBySource = () => {
+        const totals = {};
         metrics.forEach(metric => {
-            if (!groupedData[metric.YearRecorded]) {
-                groupedData[metric.YearRecorded] = {};
+            if (!totals[metric.Source]) {
+                totals[metric.Source] = {
+                    totalCitations: 0,
+                    maxHIndex: 0,
+                    maxI10Index: 0,
+                    count: 0
+                };
             }
-            groupedData[metric.YearRecorded][metric.Source] = {
-                citations: metric.TotalCitations,
-                hIndex: metric.HIndex,
-                i10Index: metric.I10Index
-            };
+            totals[metric.Source].totalCitations += metric.TotalCitations || 0;
+            totals[metric.Source].maxHIndex = Math.max(totals[metric.Source].maxHIndex, metric.HIndex || 0);
+            totals[metric.Source].maxI10Index = Math.max(totals[metric.Source].maxI10Index, metric.I10Index || 0);
+            totals[metric.Source].count += 1;
         });
-
-        // Convert to array format for chart
-        return Object.entries(groupedData).map(([year, data]) => ({
-            year: parseInt(year),
-            ...Object.entries(data).reduce((acc, [source, metrics]) => ({
-                ...acc,
-                [`${source}_citations`]: metrics.citations,
-                [`${source}_hIndex`]: metrics.hIndex,
-                [`${source}_i10Index`]: metrics.i10Index
-            }), {})
-        })).sort((a, b) => a.year - b.year);
+        return totals;
     };
 
     if (loading) return <LoadingSpinner />;
     if (error) return <div className="text-red-500 text-center mt-4">{error}</div>;
 
-    const chartData = prepareChartData();
+    const totalsBySource = getTotalsBySource();
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -107,34 +90,37 @@ const CitationMetricsPage = () => {
                 <p className="text-gray-600 text-center">No citation metrics found. Add your first citation metrics!</p>
             ) : (
                 <>
-                    {/* Citation Metrics Chart */}
-                    <div className="bg-white rounded-lg shadow p-4 mb-6">
-                        <h2 className="text-lg font-semibold mb-4">Citation Trends</h2>
-                        <ResponsiveContainer width="100%" height={400}>
-                            <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="year" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                {/* Add lines for each metric type and source */}
-                                {metrics.reduce((acc, metric) => {
-                                    const source = metric.Source;
-                                    if (!acc.includes(`${source}_citations`)) {
-                                        acc.push(`${source}_citations`);
-                                    }
-                                    return acc;
-                                }, []).map((dataKey, index) => (
-                                    <Line
-                                        key={dataKey}
-                                        type="monotone"
-                                        dataKey={dataKey}
-                                        name={`${dataKey.split('_')[0]} Citations`}
-                                        stroke={index % 2 === 0 ? '#3B82F6' : '#F97316'}
-                                    />
-                                ))}
-                            </LineChart>
-                        </ResponsiveContainer>
+                    {/* Summary Statistics */}
+                    <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 className="text-lg font-semibold mb-4">Summary by Source</h2>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Citations</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max h-index</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max i10-index</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Records</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {Object.entries(totalsBySource).map(([source, data]) => (
+                                        <tr key={source}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSourceColor(source)}`}>
+                                                    {source}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{data.totalCitations}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{data.maxHIndex}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{data.maxI10Index}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{data.count}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {/* Metrics Cards */}

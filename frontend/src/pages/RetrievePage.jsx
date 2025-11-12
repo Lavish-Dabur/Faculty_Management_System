@@ -7,40 +7,17 @@ const RetrievePage = () => {
   const [faculty, setFaculty] = useState([]);
   const [filteredFaculty, setFilteredFaculty] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('faculty');
+  const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
 
   useEffect(() => {
     loadFacultyData();
   }, []);
 
-
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredFaculty(faculty);
-      return;
-    }
-
-    const searchLower = searchTerm.toLowerCase();
-    let filtered = faculty;
-
-    if (filterType === 'faculty') {
-      filtered = filtered.filter(
-        (f) =>
-          f.FirstName?.toLowerCase().includes(searchLower) ||
-          f.LastName?.toLowerCase().includes(searchLower) ||
-          `${f.FirstName} ${f.LastName}`.toLowerCase().includes(searchLower) ||
-          f.Email?.toLowerCase().includes(searchLower)
-      );
-    } else if (filterType === 'department') {
-      filtered = filtered.filter(
-        (f) => f.Department?.DepartmentName?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    setFilteredFaculty(filtered);
+    filterFaculty();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, faculty, filterType]);
 
   const loadFacultyData = async () => {
@@ -49,12 +26,43 @@ const RetrievePage = () => {
       setError('');
       const facultyData = await facultyAPI.getAllFaculty();
       setFaculty(facultyData);
+      setFilteredFaculty(facultyData);
     } catch (error) {
       console.error('Error loading faculty data:', error);
       setError('Failed to load faculty data. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterFaculty = () => {
+    if (!searchTerm.trim()) {
+      setFilteredFaculty(faculty);
+      return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    const filtered = faculty.filter((f) => {
+      if (filterType === 'all') {
+        return (
+          f.FirstName?.toLowerCase().includes(term) ||
+          f.LastName?.toLowerCase().includes(term) ||
+          f.Email?.toLowerCase().includes(term) ||
+          f.Department?.DepartmentName?.toLowerCase().includes(term)
+        );
+      } else if (filterType === 'faculty') {
+        return (
+          f.FirstName?.toLowerCase().includes(term) ||
+          f.LastName?.toLowerCase().includes(term) ||
+          f.Email?.toLowerCase().includes(term)
+        );
+      } else if (filterType === 'department') {
+        return f.Department?.DepartmentName?.toLowerCase().includes(term);
+      }
+      return true;
+    });
+
+    setFilteredFaculty(filtered);
   };
 
   const handleSearchChange = (e) => {
@@ -66,8 +74,14 @@ const RetrievePage = () => {
   };
 
   const handleViewProfile = (facultyId) => {
-    navigate(`/faculty/${facultyId}`);
+    if (!facultyId) {
+      console.error("Faculty ID missing");
+      return;
+    }
+    localStorage.setItem("viewProfileId", facultyId);
+    navigate('/faculty-profile');
   };
+
 
   const getRoleClass = (role) => {
     switch (role?.toLowerCase()) {
@@ -79,6 +93,7 @@ const RetrievePage = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+ 
 
   const getRoleIcon = (role) => {
     switch (role?.toLowerCase()) {
@@ -103,7 +118,7 @@ const RetrievePage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
@@ -117,37 +132,39 @@ const RetrievePage = () => {
           </div>
         </div>
 
-        {/* 🔽 Filter Section */}
-        <div className='filter-search'>
-          <div className="filter-section">
-            <div className="filter-container">
-              {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
-              <select
-                id="filterType"
-                value={filterType}
-                onChange={(e) => {
-                  setFilterType(e.target.value);
-                  setSearchTerm('');
-                }}
-                className="filter-dropdown"
-              >
-        
-                <option value="faculty">Faculty Name</option>
-                <option value="department">Department</option>
-              </select>
-
-              
-            </div>
+        {/* Filter and Search Section */}
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Filter Dropdown */}
+          <div className="w-full md:w-48">
+            <select
+              id="filterType"
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setSearchTerm('');
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+            >
+              <option value="all">All Fields</option>
+              <option value="faculty">Faculty Name</option>
+              <option value="department">Department</option>
+            </select>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative max-w-md">
+          {/* Search Input */}
+          <div className="flex-1 relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-gray-400">🔍</span>
             </div>
             <input
               type="text"
-              placeholder="Search faculty by name or email..."
+              placeholder={
+                filterType === 'all'
+                  ? 'Search by name, email, or department...'
+                  : filterType === 'faculty'
+                  ? 'Search by faculty name or email...'
+                  : 'Search by department name...'
+              }
               value={searchTerm}
               onChange={handleSearchChange}
               className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -180,11 +197,8 @@ const RetrievePage = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-          <span className="text-red-800">{error}</span>
-          <button onClick={loadFacultyData} className="text-red-600 hover:text-red-800 font-medium">
-            Try Again
-          </button>
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          {error}
         </div>
       )}
 

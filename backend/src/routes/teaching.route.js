@@ -2,9 +2,9 @@ import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import {
   addTeachingExperience,
-  listTeachingExperiences,
-  updateTeachingExperience,
   deleteTeachingExperience,
+  listTeachingExperience,
+  updateTeachingExperience,
   addSubject,
   listSubjects,
   updateSubject,
@@ -17,7 +17,7 @@ router.use(protectRoute);
 
 // Teaching Experience routes
 router.post("/", addTeachingExperience);
-router.get("/", listTeachingExperiences);
+router.get("/", listTeachingExperience);
 router.put("/:experienceId", updateTeachingExperience);
 router.delete("/:experienceId", deleteTeachingExperience);
 

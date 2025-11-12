@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth.store';
 import Navbar from './components/Navbar';
-import AuthGate from './components/AuthGate';
+import AuthGate from './components/AuthGate.jsx';
 
 // Pages
 import HomePage from './pages/HomePage';

@@ -1,15 +1,15 @@
 import express from "express";
 import { 
-  getPendingRequests,
-  getApprovedFaculty,
-  approveFaculty,
+  getPendingRequests, 
+  approveFaculty, 
   rejectFaculty, 
-  addDepartment, 
-  getAllDepartments,
+  getDashboardStats,
+  getApprovedFaculty,
   getDepartments,
-  updateDepartment, 
-  deleteDepartment,
-  getDashboardStats
+  getAllDepartments,
+  addDepartment,
+  updateDepartment,
+  deleteDepartment
 } from "../controller/admin.controller.js";
 
 import { protectAdminRoute } from "../middleware/auth.middleware.js";
