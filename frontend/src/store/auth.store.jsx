@@ -53,4 +53,4 @@ const useAuth = create((set) => ({
   clearError: () => set({ error: null })
 }));
 
-export default useAuth;
+export { useAuth };

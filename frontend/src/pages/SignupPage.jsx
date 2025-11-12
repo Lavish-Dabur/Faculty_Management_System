@@ -85,9 +85,7 @@ const SignupPage = ({ navigate, onSignup }) => {
       navigate('login');
       
     } catch (error) {
-      // Prefer server-provided message (api.js attaches parsed body to error.body)
-      const serverMsg = error?.body?.message || error?.body || error?.message;
-      setErrors({ submit: serverMsg || 'Failed to create account. Please try again.' });
+      setErrors({ submit: error.message || 'Failed to create account. Please try again.' });
     } finally {
       setLoading(false);
     }

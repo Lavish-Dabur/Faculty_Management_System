@@ -28,18 +28,9 @@ const apiCall = async (endpoint, options = {}) => {
     
     // Check if response is OK
     if (!response.ok) {
-      // try to parse JSON error body
-      let parsedBody = null;
-      try {
-        parsedBody = await response.json();
-      } catch (e) {
-        parsedBody = await response.text();
-      }
-      console.error(`❌ API Error ${response.status}:`, parsedBody);
-      const err = new Error(`HTTP error! status: ${response.status}`);
-      err.status = response.status;
-      err.body = parsedBody;
-      throw err;
+      const errorText = await response.text();
+      console.error(`❌ API Error ${response.status}:`, errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -80,10 +71,6 @@ export const authAPI = {
 
 // Faculty API
 export const facultyAPI = {
-  // Get all approved faculty
-  getAllFaculty: () =>
-    apiCall('/faculty/'),
-
   getProfile: () =>
     apiCall('/faculty/getfaculty'),
 
@@ -183,8 +170,11 @@ export const adminAPI = {
 };
 
 export const departmentAPI = {
-  getAllDepartments: () =>
-    apiCall('/admin/departments'),
+  getAllDepartments: async () => {
+    const response = await fetch("/api/departments");
+    if (!response.ok) throw new Error("Failed to fetch departments");
+    return response.json();
+  },
 };
 
 // Awards API
@@ -267,9 +257,3 @@ export const testConnection = async () => {
 };
 
 export { apiCall };
-
-// Search API
-export const searchAPI = {
-  // Search faculty by a query string (backend handles name/department/research/publications)
-  searchFaculty: (query) => apiCall(`/search?query=${encodeURIComponent(query)}`),
-};

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { facultyAPI } from '../services/api';
+import { facultyAPI, departmentAPI } from '../services/api';
+import '../styles/retrieve.css';
 
 const RetrievePage = () => {
   const navigate = useNavigate();
@@ -18,30 +18,8 @@ const RetrievePage = () => {
 
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredFaculty(faculty);
-      return;
-    }
-
-    const searchLower = searchTerm.toLowerCase();
-    let filtered = faculty;
-
-    if (filterType === 'faculty') {
-      filtered = filtered.filter(
-        (f) =>
-          f.FirstName?.toLowerCase().includes(searchLower) ||
-          f.LastName?.toLowerCase().includes(searchLower) ||
-          `${f.FirstName} ${f.LastName}`.toLowerCase().includes(searchLower) ||
-          f.Email?.toLowerCase().includes(searchLower)
-      );
-    } else if (filterType === 'department') {
-      filtered = filtered.filter(
-        (f) => f.Department?.DepartmentName?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    setFilteredFaculty(filtered);
-  }, [searchTerm, faculty, filterType]);
+    filterFaculty();
+  }, [searchTerm, faculty, filterType, selectedDept]);
 
   const loadFacultyData = async () => {
     try {
@@ -65,9 +43,17 @@ const RetrievePage = () => {
     setSearchTerm('');
   };
 
-  const handleViewProfile = (facultyId) => {
-    navigate(`/faculty/${facultyId}`);
-  };
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+  const handleClearSearch = () => setSearchTerm('');
+ const handleViewProfile = (facultyId) => {
+  if (!facultyId) {
+    console.error("Faculty ID missing");
+    return;
+  }
+  localStorage.setItem("viewProfileId", facultyId); // save selected faculty temporarily
+
+  navigate('faculty-profile');};
+
 
   const getRoleClass = (role) => {
     switch (role?.toLowerCase()) {
@@ -79,6 +65,7 @@ const RetrievePage = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+ 
 
   const getRoleIcon = (role) => {
     switch (role?.toLowerCase()) {
@@ -117,33 +104,54 @@ const RetrievePage = () => {
           </div>
         </div>
 
-        {/* 🔽 Filter Section */}
+        {/*  Filter Section */}
         <div className='filter-search'>
-          <div className="filter-section">
-            <div className="filter-container">
-              {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
-              <select
-                id="filterType"
-                value={filterType}
-                onChange={(e) => {
-                  setFilterType(e.target.value);
-                  setSearchTerm('');
-                }}
-                className="filter-dropdown"
-              >
-        
-                <option value="faculty">Faculty Name</option>
-                <option value="department">Department</option>
-              </select>
+        <div className="filter-section">
+          <div className="filter-container">
+            {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
+            <select
+  id="filterType"
+  value={filterType}
+  onChange={(e) => {
+    setFilterType(e.target.value);
+    setSearchTerm('');
+  }}
+  className="filter-dropdown"
+>
+  <option value="all">Select</option>
+  <option value="faculty">Faculty Name</option>
+  <option value="department">Department</option>
+</select>
+
 
               
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-400">🔍</span>
+        {/* Search Section */}
+        <div className="search-section">
+          <div className="search-container">
+            <div className="form-input-wrapper">
+              <div className="search-icon"></div>
+              <input
+                type="text"
+                placeholder={
+  filterType === 'all'
+    ? 'Search...'
+    : filterType === 'faculty'
+    ? 'Search by Faculty name'
+    : 'Search by Department name'
+}
+
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="search-input"
+              />
+              {searchTerm && (
+                <button onClick={handleClearSearch} className="clear-search-button">
+                  ✕
+                </button>
+              )}
             </div>
             <input
               type="text"
@@ -178,15 +186,62 @@ const RetrievePage = () => {
         )}
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-          <span className="text-red-800">{error}</span>
-          <button onClick={loadFacultyData} className="text-red-600 hover:text-red-800 font-medium">
-            Try Again
-          </button>
-        </div>
-      )}
+        {/* Faculty Table */}
+        <div className="data-table-container">
+          {filteredFaculty.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">{searchTerm ? '🔍' : '👥'}</div>
+              <h3>
+                {searchTerm || selectedDept
+                  ? 'No faculty found'
+                  : 'No faculty members'}
+              </h3>
+              <button
+                onClick={() => {
+                  handleClearSearch();
+                  setSelectedDept('');
+                  setFilterType('all');
+                }}
+                className="primary-button"
+              >
+                View All Faculty
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="data-table">
+                <div className="table-header">
+                  <div className="header-name">Name</div>
+                  <div className="header-email">Email</div>
+                  <div className="header-role">Role</div>
+                  <div className="header-department">Department</div>
+                  <div className="header-actions">Actions</div>
+                </div>
+
+                <div className="table-body">
+                  {filteredFaculty.map((f) => (
+                    <div key={f.FacultyID} className="table-row">
+                      <div className="cell-name">
+                        <div className="faculty-avatar">
+                          {f.FirstName?.charAt(0)}
+                          {f.LastName?.charAt(0)}
+                        </div>
+                        <div className="faculty-name">
+                          <strong>{f.FirstName} {f.LastName}</strong>
+                          {f.Phone_no && <span className="faculty-phone">{f.Phone_no}</span>}
+                        </div>
+                      </div>
+
+                      <div className="cell-email">
+                        <span className="email-text">{f.Email}</span>
+                      </div>
+
+                      <div className="cell-role">
+                        <span className={`role-badge ${getRoleClass(f.Role)}`}>
+                          
+                          {f.Role}
+                        </span>
+                      </div>
 
       {/* Faculty Grid/List */}
       {filteredFaculty.length === 0 ? (

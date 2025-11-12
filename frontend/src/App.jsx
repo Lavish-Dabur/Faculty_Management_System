@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth.store';
 import Navbar from './components/Navbar';
-import AuthGate from './components/AuthGate';
+import AuthGate from './components/AuthGate.jsx';
+import RetrievePage from './pages/RetrievePage';
+import ProfilePage from './pages/ProfilePage'; 
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -15,8 +17,12 @@ const App = () => {
   let Content;
   switch (currentView) {
     case 'auth_gate':   Content = <AuthGate navigate={navigate} />; break;
-  case 'login':      Content = <LoginPage navigate={navigate} />; break;
-  case 'signup':     Content = <SignupPage navigate={navigate} />; break;
+    case 'login':       Content = <LoginPage navigate={navigate} onLogin={handleLogin} />; break;
+    case 'signup':      Content = <SignupPage navigate={navigate} />; break;
+    case 'retrieve':    Content = <RetrievePage navigate={navigate} />; break;
+    // case 'profile': Content = <ProfilePage navigate={navigate} />; break;
+    case 'admin-dashboard': Content = <AdminDashboard user={user} navigate={navigate} />; break;
+    case 'faculty-profile': Content = <FacultyProfile user={user} navigate={navigate} />; break;
     case 'home':
     default:           Content = <HomePage navigate={navigate} />; break;
   }
