@@ -82,6 +82,9 @@ export const facultyAPI = {
 
   getFacultyById: (id) =>
     apiCall(`/faculty/${id}`),
+
+  getAllFaculty: () =>
+    apiCall('/faculty/all'),
 };
 
 // Research API

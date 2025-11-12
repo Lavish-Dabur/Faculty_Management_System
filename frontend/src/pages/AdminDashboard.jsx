@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminAPI } from '../services/api';
 import PrimaryButton from '../components/PrimaryButton';
-import '../styles/dashboard.css';
 
 const AdminDashboard = ({ user, navigate }) => {
   const [stats, setStats] = useState({});

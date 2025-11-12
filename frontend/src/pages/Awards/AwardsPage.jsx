@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axios';
-import LoadingSpinner from '../components/LoadingSpinner';
-import PrimaryButton from '../components/PrimaryButton';
+import axios from '../../utils/axios';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import PrimaryButton from '../../components/PrimaryButton';
 
 const AwardsPage = () => {
     const [awards, setAwards] = useState([]);
@@ -20,7 +20,8 @@ const AwardsPage = () => {
             const response = await axios.get(`/api/faculty/awards/${facultyId}`);
             setAwards(response.data);
             setLoading(false);
-        } catch (err) {
+        } catch (error) {
+            console.error('Error fetching awards:', error);
             setError('Failed to fetch awards');
             setLoading(false);
         }
@@ -31,7 +32,8 @@ const AwardsPage = () => {
             try {
                 await axios.delete(`/api/faculty/awards/${awardId}`);
                 setAwards(awards.filter(award => award.AwardID !== awardId));
-            } catch (err) {
+            } catch (error) {
+                console.error('Error deleting award:', error);
                 setError('Failed to delete award');
             }
         }

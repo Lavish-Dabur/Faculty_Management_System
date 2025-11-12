@@ -1,7 +1,6 @@
 // src/pages/FacultyProfile.jsx
 import React, { useState, useEffect } from 'react';
 import { facultyAPI, researchAPI, publicationAPI } from '../services/api';
-import '../styles/profile.css';
 
 const FacultyProfile = ({ user, navigate }) => {
   const [profile, setProfile] = useState(null);

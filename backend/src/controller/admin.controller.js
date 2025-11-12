@@ -253,8 +253,19 @@ export const deleteDepartment = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Check if department has faculty members
+    const facultyCount = await prisma.faculty.count({
+      where: { DepartmentID: parseInt(id) }
+    });
+
+    if (facultyCount > 0) {
+      return res.status(400).json({ 
+        message: "Cannot delete department with assigned faculty members" 
+      });
+    }
+
     await prisma.department.delete({
-      where: { DepartmentID: parseInt(id) },
+      where: { DepartmentID: parseInt(id) }
     });
 
     res.status(200).json({ message: "Department deleted successfully" });
