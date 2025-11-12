@@ -83,7 +83,15 @@ const RetrievePage = ({ navigate }) => {
 
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const handleClearSearch = () => setSearchTerm('');
-  const handleViewProfile = (facultyId) => navigate(`/faculty/${facultyId}`);
+ const handleViewProfile = (facultyId) => {
+  if (!facultyId) {
+    console.error("Faculty ID missing");
+    return;
+  }
+  localStorage.setItem("viewProfileId", facultyId); // save selected faculty temporarily
+
+  navigate('faculty-profile');};
+
 
   const getRoleClass = (role) => {
     switch (role?.toLowerCase()) {
@@ -95,6 +103,7 @@ const RetrievePage = ({ navigate }) => {
       default: return 'role-staff';
     }
   };
+ 
 
  
 
@@ -128,24 +137,25 @@ const RetrievePage = ({ navigate }) => {
           </div>
         </div>
 
-        {/* 🔽 Filter Section */}
+        {/*  Filter Section */}
         <div className='filter-search'>
         <div className="filter-section">
           <div className="filter-container">
             {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
             <select
-              id="filterType"
-              value={filterType}
-              onChange={(e) => {
-                setFilterType(e.target.value);
-                setSearchTerm('');
-              }}
-              className="filter-dropdown"
-            >
-      
-              <option value="faculty">Faculty Name</option>
-              <option value="department">Department</option>
-            </select>
+  id="filterType"
+  value={filterType}
+  onChange={(e) => {
+    setFilterType(e.target.value);
+    setSearchTerm('');
+  }}
+  className="filter-dropdown"
+>
+  <option value="all">Select</option>
+  <option value="faculty">Faculty Name</option>
+  <option value="department">Department</option>
+</select>
+
 
             
           </div>
@@ -155,14 +165,17 @@ const RetrievePage = ({ navigate }) => {
         <div className="search-section">
           <div className="search-container">
             <div className="form-input-wrapper">
-              <div className="search-icon">🔍</div>
+              <div className="search-icon"></div>
               <input
                 type="text"
                 placeholder={
-                  filterType === 'faculty'
-                    ? 'Search by Faculty name'
-                    : 'Search by Department name'
-                }
+  filterType === 'all'
+    ? 'Search...'
+    : filterType === 'faculty'
+    ? 'Search by Faculty name'
+    : 'Search by Department name'
+}
+
                 value={searchTerm}
                 onChange={handleSearchChange}
                 className="search-input"
@@ -239,7 +252,7 @@ const RetrievePage = ({ navigate }) => {
 
                       <div className="cell-role">
                         <span className={`role-badge ${getRoleClass(f.Role)}`}>
-                          <span className="role-icon">{getRoleIcon(f.Role)}</span>
+                          
                           {f.Role}
                         </span>
                       </div>
