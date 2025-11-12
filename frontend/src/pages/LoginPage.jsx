@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { authAPI, testConnection } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { testConnection } from '../services/api';
+import { useAuth } from '../store/auth.store';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
-import axios from "axios";
 
-const LoginForm = ({ navigate, onLogin }) => {
+const LoginForm = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,7 +21,6 @@ const LoginForm = ({ navigate, onLogin }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     
-    // Basic validation
     const errs = {};
     if (!form.email) errs.email = 'Email is required.';
     if (!form.password) errs.password = 'Password is required.';
@@ -30,63 +31,45 @@ const LoginForm = ({ navigate, onLogin }) => {
     setErrors({});
     
     try {
-      console.log('Attempting login with:', { email: form.email });
-      
-      // Test connection first
-      console.log('Testing backend connection...');
       const isConnected = await testConnection();
       
       if (!isConnected) {
-        setErrors({ submit: '❌ Cannot connect to server. Please check if backend is running on port 5001.' });
+        setErrors({ submit: 'Cannot connect to server. Please check if backend is running on port 5001.' });
         setLoading(false);
         return;
       }
 
-      console.log('✅ Backend connected, sending login request...');
-      
-      const response = await authAPI.login(
-        form.email,
-        form.password
-      );
+      const response = await login(form.email, form.password);
       
       console.log('Login response:', response);
+      console.log('User role:', response.Role);
       
-      // Handle successful login
-      if (response.data) {
-        const userData = response.data;
-        
-        // Store token if available
-        if (userData.token) {
-          localStorage.setItem('token', userData.token);
-        }
-        
-        if (onLogin) {
-          onLogin({
-            facultyId: userData.FacultyID || userData.id,
-            firstname: userData.FirstName || userData.firstname,
-            lastname: userData.LastName || userData.lastname,
-            email: userData.Email || userData.email,
-            role: userData.Role || userData.role,
-            token: userData.token
-          });
-        }
-        
-        // Navigate based on role
-        const role = userData.Role || userData.role;
+      setLoading(false);
+      
+      const role = response.Role;
+      
+      // Wait a bit for state to update
+      setTimeout(() => {
         if (role === 'Admin') {
-          navigate('admin-dashboard');
+          console.log('Navigating to /admin');
+          navigate('/admin', { replace: true });
         } else {
-          navigate('faculty-profile');
+          console.log('Navigating to /dashboard');
+          navigate('/dashboard', { replace: true });
         }
-      }
+      }, 100);
       
     } catch (error) {
-      console.error('Login error:', error);
-      
-      // More specific error messages
       let errorMessage = 'Login failed. Please check your credentials.';
       
-      if (error.message.includes('400')) {
+      // Log the full error for debugging
+      console.error('Login error:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.data?.message) {
+        // Use the exact error message from backend
+        errorMessage = error.response.data.message;
+      } else if (error.message.includes('400')) {
         errorMessage = 'Invalid email or password format.';
       } else if (error.message.includes('404')) {
         errorMessage = 'Login endpoint not found. Check backend routes.';
@@ -99,7 +82,6 @@ const LoginForm = ({ navigate, onLogin }) => {
       }
       
       setErrors({ submit: errorMessage });
-    } finally {
       setLoading(false);
     }
   };

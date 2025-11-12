@@ -76,13 +76,46 @@ export const ExportByName = async (req, res) => {
 
 export const filterFaculty = async (req, res) => {
   try {
-    const { department, publicationType, researchInterests, format } = req.query;
+    const { department, name, publicationType, researchInterests, format, facultyId } = req.query;
 
-    const where = {};
+    console.log('Filter Faculty - Query params:', { department, name, publicationType, researchInterests, format, facultyId });
 
-    if (department) {
+    const where = { isApproved: true }; // Only show approved faculty
+
+    // Handle single faculty export by ID
+    if (facultyId) {
+      where.FacultyID = parseInt(facultyId);
+      console.log('Filtering by facultyId:', facultyId);
+    }
+
+    // Handle name search
+    if (name) {
+      where.OR = [
+        {
+          FirstName: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+        {
+          LastName: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+        {
+          Email: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    // Handle department filter
+    if (department && department !== 'all') {
       where.Department = {
-        Name: {
+        DepartmentName: {
           contains: department,
           mode: "insensitive",
         },
@@ -94,7 +127,7 @@ export const filterFaculty = async (req, res) => {
         some: {
           Publication: {
             Type: {
-              Name: {
+              PublicationType: {
                 contains: publicationType,
                 mode: "insensitive",
               },
@@ -107,11 +140,9 @@ export const filterFaculty = async (req, res) => {
     if (researchInterests) {
       where.ResearchProjects = {
         some: {
-          ResearchProject: {
-            Title: {
-              contains: researchInterests,
-              mode: "insensitive",
-            },
+          Title: {
+            contains: researchInterests,
+            mode: "insensitive",
           },
         },
       };
@@ -120,21 +151,76 @@ export const filterFaculty = async (req, res) => {
     const faculty = await prisma.faculty.findMany({
       where,
       include: {
-        Department: true,
-        ResearchProjects: { include: { ResearchProject: true } },
-        Publications: { include: { Publication: { include: { Type: true } } } },
+        Department: {
+          select: {
+            DepartmentName: true
+          }
+        }
       },
+      orderBy: {
+        FirstName: 'asc'
+      }
     });
 
+    console.log(`Found ${faculty.length} faculty members`);
+
     if (format) {
+      console.log('Export requested with format:', format);
+      
+      // If exporting single faculty profile, include more comprehensive data
+      if (facultyId && faculty.length === 1) {
+        const facultyData = await prisma.faculty.findUnique({
+          where: { FacultyID: parseInt(facultyId) },
+          include: {
+            Department: true,
+            ResearchProjects: true,
+            FacultyPublicationLink: {
+              include: {
+                Publication: true
+              }
+            },
+            Awards: true,
+            SubjectTaught: true,
+            Qualification: true,
+            Events: true,
+            Outreach: true,
+            Patent: true,
+            CitationMetrics: true
+          }
+        });
+
+        const profileData = [{
+          'Profile Information': '',
+          'First Name': facultyData.FirstName,
+          'Last Name': facultyData.LastName,
+          'Email': facultyData.Email,
+          'Phone': facultyData.Phone || 'N/A',
+          'Role': facultyData.Role || 'Faculty',
+          'Department': facultyData.Department?.DepartmentName || 'Not assigned',
+          'Research Projects': facultyData.ResearchProjects?.length || 0,
+          'Publications': facultyData.FacultyPublicationLink?.length || 0,
+          'Awards': facultyData.Awards?.length || 0,
+          'Qualifications': facultyData.Qualification?.length || 0,
+          'Teaching Experience': facultyData.SubjectTaught?.length || 0,
+          'Events': facultyData.Events?.length || 0,
+          'Outreach': facultyData.Outreach?.length || 0,
+          'Patents': facultyData.Patent?.length || 0,
+        }];
+
+        return exportFilteredData(res, profileData, format, `${facultyData.FirstName}_${facultyData.LastName}_Profile`);
+      }
+      
+      // Regular faculty list export
       const dataToExport = faculty.map(f => ({
         'First Name': f.FirstName,
         'Last Name': f.LastName,
-        'Department': f.Department.Name,
         'Email': f.Email,
-        'Phone': f.Phone,
-        'Designation': f.Designation,
+        'Phone': f.Phone || 'N/A',
+        'Role': f.Role || 'Faculty',
+        'Department': f.Department?.DepartmentName || 'Not assigned',
       }));
+
+      console.log(`Exporting ${dataToExport.length} records`);
 
       if (dataToExport.length === 0) {
         return res.status(404).json({ message: "No faculty found for the given filters" });
@@ -145,7 +231,8 @@ export const filterFaculty = async (req, res) => {
 
     res.status(200).json(faculty);
   } catch (error) {
-    console.error("Error filtering faculty:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error filtering faculty:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };

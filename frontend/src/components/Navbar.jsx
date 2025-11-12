@@ -33,14 +33,14 @@ const Navbar = () => {
                 <Link to="/profile" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
                   Profile
                 </Link>
-                {user.role === 'Admin' && (
+                {user.Role === 'Admin' && (
                   <Link to="/admin" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
                     Admin
                   </Link>
                 )}
                 <div className="flex items-center space-x-3 pl-4 border-l border-gray-200">
                   <span className="text-sm text-gray-600">
-                    {user.firstname || user.FirstName}
+                    {user.FirstName || user.firstname}
                   </span>
                   <button
                     onClick={handleLogout}

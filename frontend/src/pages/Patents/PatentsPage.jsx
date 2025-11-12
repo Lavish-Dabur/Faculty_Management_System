@@ -4,6 +4,7 @@ import axios from '../../utils/axios';
 import { useAuth } from '../../store/auth.store';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const PatentsPage = () => {
   const { user } = useAuth();
@@ -14,7 +15,7 @@ const PatentsPage = () => {
   useEffect(() => {
     const fetchPatents = async () => {
       try {
-        const response = await axios.get(`/api/faculty/patents/${user?.FacultyID}`);
+        const response = await axios.get(`/faculty/patents/${user?.FacultyID}`);
         setPatents(response.data);
       } catch (error) {
         console.error('Error fetching patents:', error);
@@ -34,7 +35,10 @@ const PatentsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Patents</h1>
+        <div className="flex items-center space-x-4">
+          <BackButton to="/dashboard" />
+          <h1 className="text-2xl font-bold">Patents</h1>
+        </div>
         <Link to="/patents/new">
           <PrimaryButton>Add Patent</PrimaryButton>
         </Link>

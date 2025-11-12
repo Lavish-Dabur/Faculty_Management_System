@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../utils/axios';
 import FormContainer from '../../components/FormContainer';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddAwardPage = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = Boolean(id);
+    
     const [formData, setFormData] = useState({
         awardName: '',
         awardingBody: '',
@@ -15,6 +19,30 @@ const AddAwardPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(isEditMode);
+
+    useEffect(() => {
+        if (isEditMode) {
+            fetchAwardData();
+        }
+    }, [id]);
+
+    const fetchAwardData = async () => {
+        try {
+            const response = await axios.get(`/faculty/awards/single/${id}`);
+            setFormData({
+                awardName: response.data.AwardName || '',
+                awardingBody: response.data.AwardingBody || '',
+                location: response.data.Location || '',
+                yearAwarded: response.data.YearAwarded || new Date().getFullYear()
+            });
+        } catch (err) {
+            setError('Failed to fetch award data');
+            console.error(err);
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -31,21 +59,42 @@ const AddAwardPage = () => {
 
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            await axios.post('/api/faculty/awards', {
-                ...formData,
-                facultyId
-            });
-            navigate('/dashboard/awards');
+            
+            if (isEditMode) {
+                await axios.put(`/faculty/awards/${id}`, {
+                    ...formData,
+                    facultyId
+                });
+            } else {
+                await axios.post('/faculty/awards', {
+                    ...formData,
+                    facultyId
+                });
+            }
+            navigate('/awards');
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to add award');
+            setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} award`);
         } finally {
             setLoading(false);
         }
     };
 
+    if (fetchLoading) {
+        return (
+            <FormContainer>
+                <div className="text-center">Loading...</div>
+            </FormContainer>
+        );
+    }
+
     return (
         <FormContainer>
-            <h2 className="text-2xl font-bold text-center mb-6">Add New Award</h2>
+            <div className="flex items-center space-x-4 mb-6">
+                <BackButton to="/awards" />
+                <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Award' : 'Add New Award'}
+                </h2>
+            </div>
             
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             
@@ -89,7 +138,7 @@ const AddAwardPage = () => {
                 <div className="flex justify-between pt-4">
                     <PrimaryButton
                         type="button"
-                        onClick={() => navigate('/dashboard/awards')}
+                        onClick={() => navigate('/awards')}
                         className="bg-gray-500 hover:bg-gray-600"
                     >
                         Cancel
@@ -98,7 +147,7 @@ const AddAwardPage = () => {
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? 'Adding...' : 'Add Award'}
+                        {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Award' : 'Add Award')}
                     </PrimaryButton>
                 </div>
             </form>

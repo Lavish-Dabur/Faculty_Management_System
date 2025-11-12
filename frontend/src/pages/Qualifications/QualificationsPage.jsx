@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const QualificationsPage = () => {
     const [qualifications, setQualifications] = useState([]);
@@ -17,7 +18,7 @@ const QualificationsPage = () => {
     const fetchQualifications = async () => {
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            const response = await axios.get(`/api/faculty/qualifications/${facultyId}`);
+            const response = await axios.get(`/faculty/qualifications/${facultyId}`);
             setQualifications(response.data);
             setLoading(false);
         } catch (err) {
@@ -29,7 +30,7 @@ const QualificationsPage = () => {
     const handleDelete = async (qualificationId) => {
         if (window.confirm('Are you sure you want to delete this qualification?')) {
             try {
-                await axios.delete(`/api/faculty/qualifications/${qualificationId}`);
+                await axios.delete(`/faculty/qualifications/${qualificationId}`);
                 setQualifications(qualifications.filter(qual => qual.QualificationID !== qualificationId));
             } catch (err) {
                 setError('Failed to delete qualification');
@@ -59,7 +60,10 @@ const QualificationsPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Educational Qualifications</h1>
+                <div className="flex items-center space-x-4">
+                    <BackButton to="/dashboard" />
+                    <h1 className="text-2xl font-bold text-gray-800">Educational Qualifications</h1>
+                </div>
                 <PrimaryButton
                     onClick={() => navigate('/qualifications/new')}
                     className="px-4 py-2"

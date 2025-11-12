@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../store/auth.store';
 import axios from '../../utils/axios';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddSubjectPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditMode);
   const [error, setError] = useState('');
 
   const [subject, setSubject] = useState({
     SubjectName: '',
     Level: ''
   });
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchSubjectData();
+    }
+  }, [id]);
+
+  const fetchSubjectData = async () => {
+    try {
+      const response = await axios.get(`/faculty/subjects/single/${id}`);
+      const data = response.data;
+      setSubject({
+        SubjectName: data.SubjectName || '',
+        Level: data.Level || ''
+      });
+    } catch (err) {
+      setError('Failed to fetch subject data');
+      console.error(err);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -30,20 +56,39 @@ const AddSubjectPage = () => {
     setError('');
 
     try {
-      await axios.post(`/api/faculty/subjects/${user.FacultyID}`, subject);
+      if (isEditMode) {
+        await axios.put(`/faculty/subjects/${id}`, subject);
+      } else {
+        await axios.post(`/faculty/subjects/${user.FacultyID}`, subject);
+      }
       navigate('/teaching');
     } catch (error) {
-      console.error('Error adding subject:', error);
-      setError(error.response?.data?.message || 'Failed to add subject');
+      console.error('Error saving subject:', error);
+      setError(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} subject`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Add Subject</h1>
+        <div className="flex items-center space-x-4 mb-6">
+          <BackButton to="/teaching" />
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? 'Edit Subject' : 'Add Subject'}
+          </h1>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
@@ -92,7 +137,7 @@ const AddSubjectPage = () => {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save Subject'}
+              {loading ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Subject' : 'Save Subject')}
             </PrimaryButton>
           </div>
         </form>

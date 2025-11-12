@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const OutreachActivitiesPage = () => {
     const [activities, setActivities] = useState([]);
@@ -17,7 +18,7 @@ const OutreachActivitiesPage = () => {
     const fetchActivities = async () => {
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            const response = await axios.get(`/api/faculty/outreach/${facultyId}`);
+            const response = await axios.get(`/faculty/outreach/${facultyId}`);
             setActivities(response.data);
             setLoading(false);
         } catch (err) {
@@ -29,7 +30,7 @@ const OutreachActivitiesPage = () => {
     const handleDelete = async (activityId) => {
         if (window.confirm('Are you sure you want to delete this outreach activity?')) {
             try {
-                await axios.delete(`/api/faculty/outreach/${activityId}`);
+                await axios.delete(`/faculty/outreach/${activityId}`);
                 setActivities(activities.filter(activity => activity.ActivityID !== activityId));
             } catch (err) {
                 setError('Failed to delete outreach activity');
@@ -51,7 +52,10 @@ const OutreachActivitiesPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Outreach Activities</h1>
+                <div className="flex items-center space-x-4">
+                    <BackButton to="/dashboard" />
+                    <h1 className="text-2xl font-bold text-gray-800">Outreach Activities</h1>
+                </div>
                 <PrimaryButton
                     onClick={() => navigate('/outreach/new')}
                     className="px-4 py-2"

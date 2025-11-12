@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../store/auth.store';
 import axios from '../../utils/axios';
 import FormInput from '../../components/FormInput';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AddPublicationPage = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(isEditMode);
   const [error, setError] = useState('');
   const [publicationType, setPublicationType] = useState('journal');
 
@@ -31,6 +35,41 @@ const AddPublicationPage = () => {
     Edition: '',
     ISBN_Number: '',
   });
+
+  useEffect(() => {
+    if (isEditMode) {
+      fetchPublicationData();
+    }
+  }, [id]);
+
+  const fetchPublicationData = async () => {
+    try {
+      const response = await axios.get(`/faculty/publication/single/${id}`);
+      const data = response.data;
+      setPublication({
+        Title: data.Title || '',
+        PublicationYear: data.PublicationYear ? new Date(data.PublicationYear).toISOString().split('T')[0] : '',
+        FundingAgency: data.FundingAgency || '',
+        TypeID: data.TypeID || '',
+        JournalName: data.JournalPublicationDetails?.Name || '',
+        VolumeNumber: data.JournalPublicationDetails?.VolumeNumber || '',
+        IssueNumber: data.JournalPublicationDetails?.IssueNumber || '',
+        ISSN_Number: data.JournalPublicationDetails?.ISSN_Number || '',
+        ConferencePublisher: data.ConferencePaperDetails?.Publisher || '',
+        ConferenceLocation: data.ConferencePaperDetails?.Location || '',
+        PageNumbers: data.ConferencePaperDetails?.PageNumbers || '',
+        BookPublisher: data.BookPublicationDetails?.Publisher || '',
+        Edition: data.BookPublicationDetails?.Edition || '',
+        ISBN_Number: data.BookPublicationDetails?.ISBN_Number || '',
+      });
+      if (data.TypeID) setPublicationType(data.TypeID);
+    } catch (err) {
+      setError('Failed to fetch publication data');
+      console.error(err);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,20 +115,39 @@ const AddPublicationPage = () => {
         };
       }
 
-      await axios.post(`/api/faculty/publication/${user.FacultyID}`, formData);
+      if (isEditMode) {
+        await axios.put(`/faculty/publication/${id}`, formData);
+      } else {
+        await axios.post(`/faculty/publication/${user.FacultyID}`, formData);
+      }
       navigate('/publications');
     } catch (error) {
-      console.error('Error adding publication:', error);
-      setError(error.response?.data?.message || 'Failed to add publication');
+      console.error('Error saving publication:', error);
+      setError(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} publication`);
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="text-center">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">Add New Publication</h1>
+        <div className="flex items-center space-x-4 mb-6">
+          <BackButton to="/publications" />
+          <h1 className="text-2xl font-bold">
+            {isEditMode ? 'Edit Publication' : 'Add New Publication'}
+          </h1>
+        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
@@ -230,7 +288,7 @@ const AddPublicationPage = () => {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save Publication'}
+              {loading ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Publication' : 'Save Publication')}
             </PrimaryButton>
           </div>
         </form>

@@ -4,44 +4,26 @@ import { adminAPI } from '../services/api';
 import PrimaryButton from '../components/PrimaryButton';
 
 const AdminDashboard = ({ user, navigate }) => {
-  const [stats, setStats] = useState({});
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [approvedFaculty, setApprovedFaculty] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [error, setError] = useState('');
-  
-  // Form states
-  const [showDepartmentForm, setShowDepartmentForm] = useState(false);
-  const [departmentForm, setDepartmentForm] = useState({ departmentName: '' });
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
+    loadPendingRequests();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadPendingRequests = async () => {
     try {
       setLoading(true);
       setError('');
       
-      // Load all data in parallel
-      const [pendingData, facultyData, departmentsData, statsData] = await Promise.all([
-        adminAPI.getPendingRequests(),
-        adminAPI.getApprovedFaculty(),
-        adminAPI.getDepartments(),
-        adminAPI.getDashboardStats()
-      ]);
-      
+      const pendingData = await adminAPI.getPendingRequests();
       setPendingRequests(pendingData);
-      setApprovedFaculty(facultyData);
-      setDepartments(departmentsData);
-      setStats(statsData);
       
     } catch (error) {
-      console.error('Error loading dashboard:', error);
-      setError('Failed to load dashboard data. Please try again.');
+      console.error('Error loading pending requests:', error);
+      setError('Failed to load pending requests. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -53,7 +35,7 @@ const AdminDashboard = ({ user, navigate }) => {
         setActionLoading(true);
         await adminAPI.approveFaculty(facultyId);
         alert(`${facultyName} approved successfully!`);
-        await loadDashboardData(); // Refresh all data
+        await loadPendingRequests(); // Refresh data
       } catch (error) {
         alert('Error approving faculty: ' + error.message);
       } finally {
@@ -68,7 +50,7 @@ const AdminDashboard = ({ user, navigate }) => {
         setActionLoading(true);
         await adminAPI.rejectFaculty(facultyId);
         alert(`${facultyName} rejected successfully!`);
-        await loadDashboardData(); // Refresh all data
+        await loadPendingRequests(); // Refresh data
       } catch (error) {
         alert('Error rejecting faculty: ' + error.message);
       } finally {
@@ -77,493 +59,153 @@ const AdminDashboard = ({ user, navigate }) => {
     }
   };
 
-  const handleAddDepartment = async (e) => {
-    e.preventDefault();
-    if (!departmentForm.departmentName.trim()) {
-      alert('Please enter a department name');
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-      await adminAPI.addDepartment(departmentForm.departmentName);
-      alert(`Department "${departmentForm.departmentName}" added successfully!`);
-      setDepartmentForm({ departmentName: '' });
-      setShowDepartmentForm(false);
-      await loadDashboardData(); // Refresh data
-    } catch (error) {
-      alert('Error adding department: ' + error.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeleteDepartment = async (departmentId, departmentName) => {
-    if (window.confirm(`Delete department "${departmentName}"? This action cannot be undone.`)) {
-      try {
-        setActionLoading(true);
-        await adminAPI.deleteDepartment(departmentId);
-        alert(`Department "${departmentName}" deleted successfully!`);
-        await loadDashboardData(); // Refresh data
-      } catch (error) {
-        alert('Error deleting department: ' + error.message);
-      } finally {
-        setActionLoading(false);
-      }
-    }
-  };
-
-  const handleViewFaculty = (facultyId) => {
-    // Navigate to faculty profile view
-    navigate(`/faculty/${facultyId}`);
-  };
-
-  const handleEditFaculty = (facultyId) => {
-    // Navigate to faculty edit page
-    navigate(`/faculty/${facultyId}/edit`);
-  };
-
-  const handleTransferDepartment = (facultyId, facultyName) => {
-    // Implement department transfer logic
-    alert(`Transfer ${facultyName} to another department - Feature coming soon!`);
-  };
-
   if (loading) {
     return (
-      <div className="dashboard-container">
-        <div className="loading-spinner">Loading Dashboard...</div>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-lg font-medium">Loading Dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-container">
-      {/* Header */}
-      <div className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <p>Welcome back, {user?.firstname} {user?.lastname}</p>
-        {error && (
-          <div className="error-message" style={{ marginTop: '1rem' }}>
-            {error}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      {/* Header with Gradient */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
+                title="Go to Dashboard"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
+                <p className="mt-2 text-indigo-100 text-lg">Welcome back, {user?.FirstName} {user?.LastName}</p>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/30">
+                <p className="text-sm text-indigo-100">Pending Requests</p>
+                <p className="text-3xl font-bold">{pendingRequests.length}</p>
+              </div>
+            </div>
+          </div>
+          {error && (
+            <div className="mt-4 bg-red-500/20 backdrop-blur-sm border border-red-300 text-white px-4 py-3 rounded-lg">
+              <p className="font-medium">⚠️ {error}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Loading Overlay with Blur */}
+      {actionLoading && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-2xl px-8 py-6 flex items-center space-x-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-indigo-600"></div>
+            <p className="text-gray-700 font-semibold text-lg">Processing...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Approvals */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Pending Faculty Approvals</h2>
+          <p className="mt-2 text-gray-600">Review and approve new faculty applications</p>
+        </div>
+        
+        {pendingRequests.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="inline-block bg-green-100 rounded-full p-6 mb-4">
+              <span className="text-6xl">✅</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">No pending approvals</h3>
+            <p className="text-gray-600 text-lg">All faculty applications have been processed.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {pendingRequests.map((request) => (
+              <div key={request.FacultyID} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border-l-4 border-orange-500">
+                <div className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="bg-orange-100 rounded-full p-3">
+                          <span className="text-2xl">👤</span>
+                        </div>
+                        <div>
+                          <h4 className="text-2xl font-bold text-gray-900">
+                            {request.FirstName} {request.LastName}
+                          </h4>
+                          <span className="inline-block px-3 py-1 bg-orange-100 text-orange-800 text-sm font-semibold rounded-full mt-1">
+                            Pending Approval
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-500">📧</span>
+                          <span className="text-gray-600"><strong>Email:</strong> {request.Email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-500">🏛️</span>
+                          <span className="text-gray-600">
+                            <strong>Department:</strong> {request.Department?.DepartmentName || 'Not assigned'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-500">👔</span>
+                          <span className="text-gray-600">
+                            <strong>Role:</strong> 
+                            <span className="ml-2 inline-block px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
+                              {request.Role}
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-500">📅</span>
+                          <span className="text-gray-600">
+                            <strong>Applied:</strong> {new Date().toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 lg:flex-col">
+                      <button
+                        onClick={() => handleApprove(request.FacultyID, `${request.FirstName} ${request.LastName}`)}
+                        disabled={actionLoading}
+                        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                      >
+                        <span>✓</span>
+                        <span>{actionLoading ? 'Processing...' : 'Approve'}</span>
+                      </button>
+                      <button 
+                        onClick={() => handleReject(request.FacultyID, `${request.FirstName} ${request.LastName}`)}
+                        disabled={actionLoading}
+                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                      >
+                        <span>✕</span>
+                        <span>{actionLoading ? 'Processing...' : 'Reject'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-
-      {/* Navigation Tabs */}
-      <div className="dashboard-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
-          disabled={actionLoading}
-        >
-          📊 Dashboard
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'approvals' ? 'active' : ''}`}
-          onClick={() => setActiveTab('approvals')}
-          disabled={actionLoading}
-        >
-          ⏳ Pending ({pendingRequests.length})
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'faculty' ? 'active' : ''}`}
-          onClick={() => setActiveTab('faculty')}
-          disabled={actionLoading}
-        >
-          👥 Faculty ({approvedFaculty.length})
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'departments' ? 'active' : ''}`}
-          onClick={() => setActiveTab('departments')}
-          disabled={actionLoading}
-        >
-          🏛️ Departments ({departments.length})
-        </button>
-      </div>
-
-      {/* Loading Overlay */}
-      {actionLoading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner">Processing...</div>
-        </div>
-      )}
-
-      {/* Dashboard Tab */}
-      {activeTab === 'dashboard' && (
-        <div className="dashboard-content">
-          {/* Stats Cards */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-info">
-                <h3>{stats.totalFaculty || 0}</h3>
-                <p>Total Faculty</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">⏳</div>
-              <div className="stat-info">
-                <h3>{stats.pendingApprovals || 0}</h3>
-                <p>Pending Approvals</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🔬</div>
-              <div className="stat-info">
-                <h3>{stats.totalResearch || 0}</h3>
-                <p>Research Projects</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">📚</div>
-              <div className="stat-info">
-                <h3>{stats.totalPublications || 0}</h3>
-                <p>Publications</p>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🏛️</div>
-              <div className="stat-info">
-                <h3>{stats.totalDepartments || 0}</h3>
-                <p>Departments</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="quick-actions">
-            <h2>Quick Actions</h2>
-            <div className="actions-grid">
-              <button 
-                className="action-card"
-                onClick={() => setActiveTab('approvals')}
-                disabled={actionLoading}
-              >
-                <div className="action-icon">✅</div>
-                <span>Review Applications</span>
-                {pendingRequests.length > 0 && (
-                  <span className="badge">{pendingRequests.length}</span>
-                )}
-              </button>
-              <button 
-                className="action-card"
-                onClick={() => setActiveTab('faculty')}
-                disabled={actionLoading}
-              >
-                <div className="action-icon">👥</div>
-                <span>Manage Faculty</span>
-              </button>
-              <button 
-                className="action-card"
-                onClick={() => setActiveTab('departments')}
-                disabled={actionLoading}
-              >
-                <div className="action-icon">🏛️</div>
-                <span>Manage Departments</span>
-              </button>
-              <button 
-                className="action-card"
-                onClick={() => loadDashboardData()}
-                disabled={actionLoading}
-              >
-                <div className="action-icon">🔄</div>
-                <span>Refresh Data</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="recent-activity">
-            <h2>Recent Activity</h2>
-            <div className="activity-list">
-              {pendingRequests.length > 0 ? (
-                <div className="activity-item urgent">
-                  <div className="activity-icon">⏳</div>
-                  <div className="activity-content">
-                    <p><strong>{pendingRequests.length} pending faculty approvals</strong></p>
-                    <p>Review and approve new faculty applications</p>
-                  </div>
-                  <button 
-                    className="action-btn view"
-                    onClick={() => setActiveTab('approvals')}
-                  >
-                    Review
-                  </button>
-                </div>
-              ) : (
-                <div className="activity-item">
-                  <div className="activity-icon">✅</div>
-                  <div className="activity-content">
-                    <p>All faculty applications have been processed</p>
-                  </div>
-                </div>
-              )}
-              
-              <div className="activity-item">
-                <div className="activity-icon">🏛️</div>
-                <div className="activity-content">
-                  <p><strong>{departments.length} departments</strong> with <strong>{approvedFaculty.length} faculty members</strong></p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pending Approvals Tab */}
-      {activeTab === 'approvals' && (
-        <div className="approvals-content">
-          <div className="section-header">
-            <h2>Pending Faculty Approvals</h2>
-            <p>Review and approve new faculty applications</p>
-          </div>
-          
-          {pendingRequests.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">✅</div>
-              <h3>No pending approvals</h3>
-              <p>All faculty applications have been processed.</p>
-            </div>
-          ) : (
-            <div className="requests-table">
-              {pendingRequests.map((request) => (
-                <div key={request.FacultyID} className="request-card">
-                  <div className="request-info">
-                    <h4>{request.FirstName} {request.LastName}</h4>
-                    <p><strong>Email:</strong> {request.Email}</p>
-                    <p><strong>Department:</strong> {request.Department?.DepartmentName || 'Not assigned'}</p>
-                    <p><strong>Role:</strong> {request.Role}</p>
-                    <p className="request-date">Applied: {new Date().toLocaleDateString()}</p>
-                  </div>
-                  <div className="request-actions">
-                    <PrimaryButton 
-                      onClick={() => handleApprove(request.FacultyID, `${request.FirstName} ${request.LastName}`)}
-                      color="bg-green-600"
-                      small={true}
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? 'Processing...' : 'Approve'}
-                    </PrimaryButton>
-                    <button 
-                      onClick={() => handleReject(request.FacultyID, `${request.FirstName} ${request.LastName}`)}
-                      className="reject-button"
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? 'Processing...' : 'Reject'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Approved Faculty Tab */}
-      {activeTab === 'faculty' && (
-        <div className="faculty-content">
-          <div className="section-header">
-            <h2>Approved Faculty Members</h2>
-            <p>Total: {approvedFaculty.length} faculty members across {departments.length} departments</p>
-          </div>
-          
-          {approvedFaculty.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">👥</div>
-              <h3>No faculty members</h3>
-              <p>No faculty members have been approved yet.</p>
-              <button 
-                className="primary-button bg-indigo-600"
-                onClick={() => setActiveTab('approvals')}
-              >
-                Review Pending Applications
-              </button>
-            </div>
-          ) : (
-            <div className="faculty-table-container">
-              <div className="faculty-table">
-                <div className="table-header">
-                  <div>Name</div>
-                  <div>Email</div>
-                  <div>Department</div>
-                  <div>Role</div>
-                  <div>Status</div>
-                  <div>Actions</div>
-                </div>
-                {approvedFaculty.map((faculty) => (
-                  <div key={faculty.FacultyID} className="table-row">
-                    <div className="faculty-name">
-                      <strong>{faculty.FirstName} {faculty.LastName}</strong>
-                    </div>
-                    <div className="faculty-email">{faculty.Email}</div>
-                    <div className="faculty-department">
-                      <span className="department-badge">
-                        {faculty.Department?.DepartmentName || 'Not assigned'}
-                      </span>
-                    </div>
-                    <div className="faculty-role">
-                      <span className={`role-badge ${faculty.Role.toLowerCase()}`}>
-                        {faculty.Role}
-                      </span>
-                    </div>
-                    <div className="faculty-status">
-                      <span className="status-badge approved">Approved</span>
-                    </div>
-                    <div className="faculty-actions">
-                      <button 
-                        className="action-btn view"
-                        onClick={() => handleViewFaculty(faculty.FacultyID)}
-                      >
-                        View
-                      </button>
-                      <button 
-                        className="action-btn edit"
-                        onClick={() => handleEditFaculty(faculty.FacultyID)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="action-btn transfer"
-                        onClick={() => handleTransferDepartment(faculty.FacultyID, `${faculty.FirstName} ${faculty.LastName}`)}
-                      >
-                        Transfer
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Departments Tab */}
-      {activeTab === 'departments' && (
-        <div className="departments-content">
-          <div className="section-header">
-            <div>
-              <h2>Department Management</h2>
-              <p>Manage academic departments and faculty assignments</p>
-            </div>
-            <button 
-              className="add-button" 
-              onClick={() => setShowDepartmentForm(!showDepartmentForm)}
-              disabled={actionLoading}
-            >
-              {showDepartmentForm ? '❌ Cancel' : '➕ Add Department'}
-            </button>
-          </div>
-
-          {/* Add Department Form */}
-          {showDepartmentForm && (
-            <div className="form-card">
-              <h3>Add New Department</h3>
-              <form onSubmit={handleAddDepartment} className="department-form">
-                <div className="form-field">
-                  <label>Department Name *</label>
-                  <input
-                    type="text"
-                    value={departmentForm.departmentName}
-                    onChange={(e) => setDepartmentForm({ departmentName: e.target.value })}
-                    placeholder="Enter department name"
-                    required
-                    className="form-input"
-                    disabled={actionLoading}
-                  />
-                </div>
-                <div className="form-actions">
-                  <button 
-                    type="submit" 
-                    className="save-button"
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'Adding...' : '💾 Add Department'}
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowDepartmentForm(false)}
-                    className="cancel-button"
-                    disabled={actionLoading}
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Departments List */}
-          {departments.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🏛️</div>
-              <h3>No departments</h3>
-              <p>No departments have been created yet.</p>
-              <button 
-                className="primary-button bg-indigo-600"
-                onClick={() => setShowDepartmentForm(true)}
-              >
-                Create First Department
-              </button>
-            </div>
-          ) : (
-            <div className="departments-grid">
-              {departments.map((department) => (
-                <div key={department.DepartmentID} className="department-card">
-                  <div className="department-header">
-                    <h3>{department.DepartmentName}</h3>
-                    <span className="faculty-count">
-                      {department.facultyCount} faculty
-                    </span>
-                  </div>
-                  
-                  <div className="department-info">
-                    <p><strong>Department ID:</strong> {department.DepartmentID}</p>
-                    <p><strong>Faculty Members:</strong> {department.facultyCount}</p>
-                  </div>
-
-                  {/* Faculty in this department */}
-                  <div className="department-faculty">
-                    <h4>Faculty Members:</h4>
-                    {approvedFaculty
-                      .filter(faculty => faculty.Department?.DepartmentName === department.DepartmentName)
-                      .map(faculty => (
-                        <div key={faculty.FacultyID} className="faculty-item">
-                          <span>{faculty.FirstName} {faculty.LastName}</span>
-                          <span className={`faculty-role ${faculty.Role.toLowerCase()}`}>
-                            {faculty.Role}
-                          </span>
-                        </div>
-                      ))}
-                    
-                    {approvedFaculty.filter(faculty => 
-                      faculty.Department?.DepartmentName === department.DepartmentName
-                    ).length === 0 && (
-                      <p className="no-faculty">No faculty assigned to this department</p>
-                    )}
-                  </div>
-
-                  <div className="department-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button 
-                      className="action-btn delete"
-                      onClick={() => handleDeleteDepartment(department.DepartmentID, department.DepartmentName)}
-                      disabled={actionLoading || department.facultyCount > 0}
-                    >
-                      {actionLoading ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                  
-                  {department.facultyCount > 0 && (
-                    <div className="department-warning">
-                      ⚠️ Cannot delete - department has faculty members
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

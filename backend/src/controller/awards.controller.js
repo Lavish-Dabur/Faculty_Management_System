@@ -51,21 +51,26 @@ export const updateAward = async (req, res) => {
       where: { AwardID: parseInt(awardId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing) {
       return res.status(404).json({ message: "Award not found" });
     }
 
-    const updated = await prisma.awards.update({
+    if (existing.FacultyID !== facultyId) {
+      return res.status(403).json({ message: "Not authorized to update this award" });
+    }
+
+    const data = {};
+    if (awardName !== undefined) data.AwardName = awardName;
+    if (awardingBody !== undefined) data.AwardingBody = awardingBody;
+    if (location !== undefined) data.Location = location;
+    if (yearAwarded !== undefined) data.YearAwarded = parseInt(yearAwarded);
+
+    const updatedAward = await prisma.awards.update({
       where: { AwardID: parseInt(awardId) },
-      data: {
-        AwardName: awardName || existing.AwardName,
-        AwardingBody: awardingBody !== undefined ? awardingBody : existing.AwardingBody,
-        Location: location !== undefined ? location : existing.Location,
-        YearAwarded: yearAwarded ? parseInt(yearAwarded) : existing.YearAwarded
-      }
+      data
     });
 
-    res.status(200).json(updated);
+    res.status(200).json(updatedAward);
   } catch (error) {
     console.error("Error updating award:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -81,8 +86,12 @@ export const deleteAward = async (req, res) => {
       where: { AwardID: parseInt(awardId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing) {
       return res.status(404).json({ message: "Award not found" });
+    }
+
+    if (existing.FacultyID !== facultyId) {
+      return res.status(403).json({ message: "Not authorized to delete this award" });
     }
 
     await prisma.awards.delete({

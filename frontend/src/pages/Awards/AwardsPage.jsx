@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 
 const AwardsPage = () => {
     const [awards, setAwards] = useState([]);
@@ -17,7 +18,7 @@ const AwardsPage = () => {
     const fetchAwards = async () => {
         try {
             const facultyId = JSON.parse(localStorage.getItem('user')).FacultyID;
-            const response = await axios.get(`/api/faculty/awards/${facultyId}`);
+            const response = await axios.get(`/faculty/awards/${facultyId}`);
             setAwards(response.data);
             setLoading(false);
         } catch (error) {
@@ -30,7 +31,7 @@ const AwardsPage = () => {
     const handleDelete = async (awardId) => {
         if (window.confirm('Are you sure you want to delete this award?')) {
             try {
-                await axios.delete(`/api/faculty/awards/${awardId}`);
+                await axios.delete(`/faculty/awards/${awardId}`);
                 setAwards(awards.filter(award => award.AwardID !== awardId));
             } catch (error) {
                 console.error('Error deleting award:', error);
@@ -45,9 +46,12 @@ const AwardsPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Awards and Recognitions</h1>
+                <div className="flex items-center space-x-4">
+                    <BackButton to="/dashboard" />
+                    <h1 className="text-2xl font-bold text-gray-800">Awards and Recognitions</h1>
+                </div>
                 <PrimaryButton
-                    onClick={() => navigate('/dashboard/awards/add')}
+                    onClick={() => navigate('/awards/new')}
                     className="px-4 py-2"
                 >
                     Add New Award
@@ -72,7 +76,7 @@ const AwardsPage = () => {
                             </p>
                             <div className="flex justify-end space-x-2">
                                 <button
-                                    onClick={() => navigate(`/dashboard/awards/edit/${award.AwardID}`)}
+                                    onClick={() => navigate(`/awards/edit/${award.AwardID}`)}
                                     className="text-blue-600 hover:text-blue-800"
                                 >
                                     Edit

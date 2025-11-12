@@ -1,50 +1,34 @@
 // src/services/api.js
 const API_BASE_URL = 'http://localhost:5001/api';
 
-// Generic API call function
 const apiCall = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  
-  console.log(`🔗 Making API call to: ${url}`);
 
   const config = {
     headers: {
       'Content-Type': 'application/json',
     },
-    credentials: 'include', // Important for cookies
+    credentials: 'include',
     ...options,
   };
 
- // Handle request body for POST, PUT requests
   if (options.body && (options.method === 'POST' || options.method === 'PUT')) {
     config.body = JSON.stringify(options.body);
   }
 
   try {
-    console.log('📤 Sending request to:', url);
-    console.log(config)
-    console.log(config.body)
     const response = await fetch(url, config);
     
-    // Check if response is OK
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ API Error ${response.status}:`, errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log('✅ API call successful:', data);
-    return data;
+    return await response.json();
     
   } catch (error) {
-    console.error('❌ API call failed:', error.message);
-    
-    // More specific error messages
     if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
       throw new Error('Cannot connect to server. Please make sure the backend is running on port 5001.');
     }
-    
     throw error;
   }
 };
@@ -89,14 +73,14 @@ export const facultyAPI = {
 
 // Research API
 export const researchAPI = {
-  addProject: (projectData) =>
-    apiCall('/faculty/research', {
+  addProject: (facultyId, projectData) =>
+    apiCall(`/faculty/research/${facultyId}`, {
       method: 'POST',
       body: projectData,
     }),
 
-  listProjects: () =>
-    apiCall('/faculty/research'),
+  listProjects: (facultyId) =>
+    apiCall(`/faculty/research/${facultyId}`),
 
   updateProject: (projectId, projectData) =>
     apiCall(`/faculty/research/${projectId}`, {
@@ -112,14 +96,14 @@ export const researchAPI = {
 
 // Publication API
 export const publicationAPI = {
-  addPublication: (publicationData) =>
-    apiCall('/faculty/publication', {
+  addPublication: (facultyId, publicationData) =>
+    apiCall(`/faculty/publication/${facultyId}`, {
       method: 'POST',
       body: publicationData,
     }),
 
-  listPublications: () =>
-    apiCall('/faculty/publication'),
+  listPublications: (facultyId) =>
+    apiCall(`/faculty/publication/${facultyId}`),
 
   updatePublication: (publicationId, publicationData) =>
     apiCall(`/faculty/publication/${publicationId}`, {
@@ -251,7 +235,7 @@ export const testConnection = async () => {
   try {
     const response = await fetch('http://localhost:5001/test');
     return await response.json();
-  } catch (error) {
+  } catch {
     throw new Error('Backend server is not running. Please start the backend server on port 5001.');
   }
 };

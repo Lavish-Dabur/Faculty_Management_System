@@ -50,20 +50,25 @@ export const updateQualification = async (req, res) => {
       where: { QualificationID: parseInt(qualificationId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing) {
       return res.status(404).json({ message: "Qualification not found" });
     }
 
-    const updated = await prisma.facultyQualification.update({
+    if (existing.FacultyID !== facultyId) {
+      return res.status(403).json({ message: "Not authorized to update this qualification" });
+    }
+
+    const data = {};
+    if (degree !== undefined) data.Degree = degree;
+    if (institution !== undefined) data.Institution = institution;
+    if (yearOfCompletion !== undefined) data.YearOfCompletion = new Date(yearOfCompletion);
+
+    const updatedQualification = await prisma.facultyQualification.update({
       where: { QualificationID: parseInt(qualificationId) },
-      data: {
-        Degree: degree || existing.Degree,
-        Institution: institution || existing.Institution,
-        YearOfCompletion: yearOfCompletion ? new Date(yearOfCompletion) : existing.YearOfCompletion
-      }
+      data
     });
 
-    res.status(200).json(updated);
+    res.status(200).json(updatedQualification);
   } catch (error) {
     console.error("Error updating qualification:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -79,8 +84,12 @@ export const deleteQualification = async (req, res) => {
       where: { QualificationID: parseInt(qualificationId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing) {
       return res.status(404).json({ message: "Qualification not found" });
+    }
+
+    if (existing.FacultyID !== facultyId) {
+      return res.status(403).json({ message: "Not authorized to delete this qualification" });
     }
 
     await prisma.facultyQualification.delete({

@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.store';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    console.log('HomePage - Current user:', user);
+    
+    if (user) {
+      const role = user.Role || user.role;
+      console.log('Detected role:', role);
+      
+      if (role === 'Admin') {
+        console.log('Redirecting to /admin');
+        navigate('/admin', { replace: true });
+      } else if (role === 'Faculty') {
+        console.log('Redirecting to /dashboard');
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log('Unknown role or no role:', role);
+      }
+    }
+  }, [user, navigate]);
 
   return (
     <div className="max-w-6xl mx-auto">

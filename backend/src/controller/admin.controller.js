@@ -3,7 +3,7 @@ import prisma from "../utils/db.js";
 export const getPendingRequests = async (req, res) => {
   try {
     const pending = await prisma.faculty.findMany({
-      where: { isApproved: false, Role: "Faculty" },
+      where: { isApproved: false },
       select: {
         FacultyID: true,
         FirstName: true,
@@ -11,6 +11,9 @@ export const getPendingRequests = async (req, res) => {
         Email: true,
         Role: true,
         Department: { select: { DepartmentName: true } }
+      },
+      orderBy: {
+        FacultyID: 'desc' // Show newest requests first
       }
     });
 

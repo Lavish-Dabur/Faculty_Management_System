@@ -2,7 +2,12 @@ import prisma from "../utils/db.js"
 
 export const getFacultyProfile = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    // Use FacultyID from params if provided, otherwise from authenticated user
+    const facultyId = req.params.FacultyID 
+      ? parseInt(req.params.FacultyID) 
+      : req.user.FacultyID;
+
+    console.log('getFacultyProfile - FacultyID:', facultyId);
 
     const faculty = await prisma.faculty.findUnique({
       where: { FacultyID: facultyId },
@@ -32,9 +37,11 @@ export const getFacultyProfile = async (req, res) => {
     });
 
     if (!faculty) {
+      console.log('Faculty not found for ID:', facultyId);
       return res.status(404).json({ message: "Faculty not found" });
     }
 
+    console.log('Faculty found:', faculty.FirstName, faculty.LastName);
     res.status(200).json(faculty);
   } catch (error) {
     console.log("Error in getFacultyProfile controller:", error.message);
@@ -45,7 +52,14 @@ export const getFacultyProfile = async (req, res) => {
 
 export const updateFacultyProfile = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    // Use FacultyID from params if provided, otherwise from authenticated user
+    const facultyId = req.params.FacultyID 
+      ? parseInt(req.params.FacultyID) 
+      : req.user.FacultyID;
+
+    console.log('updateFacultyProfile - FacultyID:', facultyId);
+    console.log('Update data:', req.body);
+
     const { 
       FirstName,
       LastName,
@@ -65,7 +79,7 @@ export const updateFacultyProfile = async (req, res) => {
         FirstName,
         LastName,
         Gender,
-        DOB,
+        DOB: DOB ? new Date(DOB) : undefined,
         Phone_no,
         SubjectTaught,
         FacultyQualification,
@@ -75,6 +89,7 @@ export const updateFacultyProfile = async (req, res) => {
       },
     });
 
+    console.log('Profile updated successfully for:', updatedFaculty.FirstName, updatedFaculty.LastName);
     res.status(200).json({ message: "Profile updated successfully", faculty: updatedFaculty });
   } catch (error) {
     console.log("Error in updateFacultyProfile controller:", error.message);
