@@ -22,7 +22,7 @@ import outreachRoutes from "./routes/outreach.route.js";
 import eventRoutes from "./routes/event.route.js";
 import qualificationRoutes from "./routes/qualification.route.js";
 import qualificationsRoutes from "./routes/qualifications.route.js";
-import teachingRoutes from "./routes/teaching.route.js";
+import citationRoutes from "./routes/citation.route.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -47,11 +47,21 @@ app.use(cookieParser());
 app.use("/api/auth", authroutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/faculty", facultyroutes);
-app.use("/api/research", researchroutes); // Removed /faculty
-app.use("/api/publications", publicationroutes); // Removed /faculty  
-app.use("/api/awards", awardsRoutes); // Removed /faculty
-app.use("/api/qualifications", qualificationsRoutes); // Removed /faculty
-app.use("/api/teaching", teachingRoutes); // Removed /faculty
+app.use("/api/research", researchroutes);
+app.use("/api/publications", publicationroutes);
+app.use("/api/awards", awardsRoutes);
+app.use("/api/award", awardRoutes);
+app.use("/api/qualifications", qualificationsRoutes);
+app.use("/api/qualification", qualificationRoutes);
+app.use("/api/teaching", teachingRoutes);
+app.use("/api/filter", filterRoutes);
+app.use("/api/password", passwordRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/patent", patentRoutes);
+app.use("/api/outreach", outreachRoutes);
+app.use("/api/event", eventRoutes);
+app.use("/api/citation", citationRoutes);
 
 server.listen(PORT, () => {
     console.log("Server is running on PORT " + PORT);

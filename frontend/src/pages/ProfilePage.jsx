@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import  useAuth  from '../store/auth.store';
+import { useAuth } from '../store/auth.store';
 import axios from '../utils/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import FormInput from '../components/FormInput';

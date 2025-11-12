@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { facultyAPI, departmentAPI } from '../services/api';
-import '../styles/retrieve.css';
+import { useNavigate } from 'react-router-dom';
+import { facultyAPI } from '../services/api';
 
 const RetrievePage = () => {
   const navigate = useNavigate();
   const [faculty, setFaculty] = useState([]);
   const [filteredFaculty, setFilteredFaculty] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('faculty');
+  const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
 
   useEffect(() => {
     loadFacultyData();
   }, []);
 
-
   useEffect(() => {
     filterFaculty();
-  }, [searchTerm, faculty, filterType, selectedDept]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, faculty, filterType]);
 
   const loadFacultyData = async () => {
     try {
@@ -27,12 +26,43 @@ const RetrievePage = () => {
       setError('');
       const facultyData = await facultyAPI.getAllFaculty();
       setFaculty(facultyData);
+      setFilteredFaculty(facultyData);
     } catch (error) {
       console.error('Error loading faculty data:', error);
       setError('Failed to load faculty data. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterFaculty = () => {
+    if (!searchTerm.trim()) {
+      setFilteredFaculty(faculty);
+      return;
+    }
+
+    const term = searchTerm.toLowerCase();
+    const filtered = faculty.filter((f) => {
+      if (filterType === 'all') {
+        return (
+          f.FirstName?.toLowerCase().includes(term) ||
+          f.LastName?.toLowerCase().includes(term) ||
+          f.Email?.toLowerCase().includes(term) ||
+          f.Department?.DepartmentName?.toLowerCase().includes(term)
+        );
+      } else if (filterType === 'faculty') {
+        return (
+          f.FirstName?.toLowerCase().includes(term) ||
+          f.LastName?.toLowerCase().includes(term) ||
+          f.Email?.toLowerCase().includes(term)
+        );
+      } else if (filterType === 'department') {
+        return f.Department?.DepartmentName?.toLowerCase().includes(term);
+      }
+      return true;
+    });
+
+    setFilteredFaculty(filtered);
   };
 
   const handleSearchChange = (e) => {
@@ -43,16 +73,14 @@ const RetrievePage = () => {
     setSearchTerm('');
   };
 
-  const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const handleClearSearch = () => setSearchTerm('');
- const handleViewProfile = (facultyId) => {
-  if (!facultyId) {
-    console.error("Faculty ID missing");
-    return;
-  }
-  localStorage.setItem("viewProfileId", facultyId); // save selected faculty temporarily
-
-  navigate('faculty-profile');};
+  const handleViewProfile = (facultyId) => {
+    if (!facultyId) {
+      console.error("Faculty ID missing");
+      return;
+    }
+    localStorage.setItem("viewProfileId", facultyId);
+    navigate('/faculty-profile');
+  };
 
 
   const getRoleClass = (role) => {
@@ -90,7 +118,7 @@ const RetrievePage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
@@ -104,58 +132,39 @@ const RetrievePage = () => {
           </div>
         </div>
 
-        {/*  Filter Section */}
-        <div className='filter-search'>
-        <div className="filter-section">
-          <div className="filter-container">
-            {/* <label htmlFor="filterType" className="filter-label">Filter </label> */}
+        {/* Filter and Search Section */}
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Filter Dropdown */}
+          <div className="w-full md:w-48">
             <select
-  id="filterType"
-  value={filterType}
-  onChange={(e) => {
-    setFilterType(e.target.value);
-    setSearchTerm('');
-  }}
-  className="filter-dropdown"
->
-  <option value="all">Select</option>
-  <option value="faculty">Faculty Name</option>
-  <option value="department">Department</option>
-</select>
-
-
-              
-            </div>
+              id="filterType"
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setSearchTerm('');
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+            >
+              <option value="all">All Fields</option>
+              <option value="faculty">Faculty Name</option>
+              <option value="department">Department</option>
+            </select>
           </div>
 
-        {/* Search Section */}
-        <div className="search-section">
-          <div className="search-container">
-            <div className="form-input-wrapper">
-              <div className="search-icon"></div>
-              <input
-                type="text"
-                placeholder={
-  filterType === 'all'
-    ? 'Search...'
-    : filterType === 'faculty'
-    ? 'Search by Faculty name'
-    : 'Search by Department name'
-}
-
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="search-input"
-              />
-              {searchTerm && (
-                <button onClick={handleClearSearch} className="clear-search-button">
-                  ✕
-                </button>
-              )}
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-400">🔍</span>
             </div>
             <input
               type="text"
-              placeholder="Search faculty by name or email..."
+              placeholder={
+                filterType === 'all'
+                  ? 'Search by name, email, or department...'
+                  : filterType === 'faculty'
+                  ? 'Search by faculty name or email...'
+                  : 'Search by department name...'
+              }
               value={searchTerm}
               onChange={handleSearchChange}
               className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -186,62 +195,12 @@ const RetrievePage = () => {
         )}
       </div>
 
-        {/* Faculty Table */}
-        <div className="data-table-container">
-          {filteredFaculty.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">{searchTerm ? '🔍' : '👥'}</div>
-              <h3>
-                {searchTerm || selectedDept
-                  ? 'No faculty found'
-                  : 'No faculty members'}
-              </h3>
-              <button
-                onClick={() => {
-                  handleClearSearch();
-                  setSelectedDept('');
-                  setFilterType('all');
-                }}
-                className="primary-button"
-              >
-                View All Faculty
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="data-table">
-                <div className="table-header">
-                  <div className="header-name">Name</div>
-                  <div className="header-email">Email</div>
-                  <div className="header-role">Role</div>
-                  <div className="header-department">Department</div>
-                  <div className="header-actions">Actions</div>
-                </div>
-
-                <div className="table-body">
-                  {filteredFaculty.map((f) => (
-                    <div key={f.FacultyID} className="table-row">
-                      <div className="cell-name">
-                        <div className="faculty-avatar">
-                          {f.FirstName?.charAt(0)}
-                          {f.LastName?.charAt(0)}
-                        </div>
-                        <div className="faculty-name">
-                          <strong>{f.FirstName} {f.LastName}</strong>
-                          {f.Phone_no && <span className="faculty-phone">{f.Phone_no}</span>}
-                        </div>
-                      </div>
-
-                      <div className="cell-email">
-                        <span className="email-text">{f.Email}</span>
-                      </div>
-
-                      <div className="cell-role">
-                        <span className={`role-badge ${getRoleClass(f.Role)}`}>
-                          
-                          {f.Role}
-                        </span>
-                      </div>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          {error}
+        </div>
+      )}
 
       {/* Faculty Grid/List */}
       {filteredFaculty.length === 0 ? (

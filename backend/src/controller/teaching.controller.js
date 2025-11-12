@@ -5,32 +5,38 @@ export const addTeachingExperience = async (req, res) => {
     const facultyId = req.user.FacultyID;
     const {
       OrganizationName,
+      organizationName,
       Designation,
+      designation,
       StartDate,
+      startDate,
       EndDate,
-      NatureOfWork
+      endDate,
+      NatureOfWork,
+      natureOfWork
     } = req.body;
 
-    if (!OrganizationName || !Designation || !StartDate) {
+    // Support both naming conventions
+    const orgName = OrganizationName || organizationName;
+    const desig = Designation || designation;
+    const start = StartDate || startDate;
+    const end = EndDate || endDate;
+    const nature = NatureOfWork || natureOfWork;
+
+    if (!orgName || !desig || !start) {
       return res.status(400).json({ 
         message: "Organization name, designation, and start date are required" 
       });
-    const { organizationName, designation, startDate, endDate, natureOfWork } = req.body;
-
-    if (!organizationName || !designation || !startDate) {
-      return res.status(400).json({ message: "Organization, designation, and start date are required" });
-
     }
 
     const experience = await prisma.teachingExperience.create({
       data: {
         FacultyID: facultyId,
-        OrganizationName: organizationName,
-        Designation: designation,
-        StartDate: new Date(startDate),
-        EndDate: endDate ? new Date(endDate) : null,
-        NatureOfWork: natureOfWork || null
-
+        OrganizationName: orgName,
+        Designation: desig,
+        StartDate: new Date(start),
+        EndDate: end ? new Date(end) : null,
+        NatureOfWork: nature || null
       }
     });
 
@@ -126,6 +132,104 @@ export const deleteTeachingExperience = async (req, res) => {
     res.status(200).json({ message: "Teaching experience deleted successfully" });
   } catch (error) {
     console.error("Error deleting teaching experience:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// ============ SUBJECTS TAUGHT CONTROLLERS ============
+
+export const addSubject = async (req, res) => {
+  try {
+    const facultyId = req.user.FacultyID;
+    const { SubjectName, SubjectCode, Credits } = req.body;
+
+    if (!SubjectName || !SubjectCode) {
+      return res.status(400).json({ 
+        message: "Subject name and code are required" 
+      });
+    }
+
+    const subject = await prisma.subjectsTaught.create({
+      data: {
+        FacultyID: facultyId,
+        SubjectName,
+        SubjectCode,
+        Credits: Credits ? parseInt(Credits) : null
+      }
+    });
+
+    res.status(201).json(subject);
+  } catch (error) {
+    console.error("Error adding subject:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const listSubjects = async (req, res) => {
+  try {
+    const facultyId = req.user.FacultyID;
+    const subjects = await prisma.subjectsTaught.findMany({
+      where: { FacultyID: facultyId },
+      orderBy: { SubjectName: "asc" }
+    });
+
+    res.status(200).json(subjects);
+  } catch (error) {
+    console.error("Error listing subjects:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const updateSubject = async (req, res) => {
+  try {
+    const facultyId = req.user.FacultyID;
+    const { subjectId } = req.params;
+    const { SubjectName, SubjectCode, Credits } = req.body;
+
+    const existing = await prisma.subjectsTaught.findUnique({
+      where: { SubjectID: parseInt(subjectId) }
+    });
+
+    if (!existing || existing.FacultyID !== facultyId) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    const subject = await prisma.subjectsTaught.update({
+      where: { SubjectID: parseInt(subjectId) },
+      data: {
+        SubjectName: SubjectName || existing.SubjectName,
+        SubjectCode: SubjectCode || existing.SubjectCode,
+        Credits: Credits !== undefined ? parseInt(Credits) : existing.Credits
+      }
+    });
+
+    res.status(200).json(subject);
+  } catch (error) {
+    console.error("Error updating subject:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteSubject = async (req, res) => {
+  try {
+    const facultyId = req.user.FacultyID;
+    const { subjectId } = req.params;
+
+    const existing = await prisma.subjectsTaught.findUnique({
+      where: { SubjectID: parseInt(subjectId) }
+    });
+
+    if (!existing || existing.FacultyID !== facultyId) {
+      return res.status(404).json({ message: "Subject not found" });
+    }
+
+    await prisma.subjectsTaught.delete({
+      where: { SubjectID: parseInt(subjectId) }
+    });
+
+    res.status(200).json({ message: "Subject deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting subject:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

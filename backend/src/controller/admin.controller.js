@@ -75,66 +75,6 @@ export const getDepartments = async (req, res) => {
   }
 };
 
-export const addDepartment = async (req, res) => {
-  try {
-    const { departmentName } = req.body;
-
-    if (!departmentName) {
-      return res.status(400).json({ message: "Department name is required" });
-    }
-
-    const existingDepartment = await prisma.department.findUnique({
-      where: { DepartmentName: departmentName }
-    });
-
-    if (existingDepartment) {
-      return res.status(400).json({ message: "Department already exists" });
-    }
-
-    const department = await prisma.department.create({
-      data: { DepartmentName: departmentName }
-    });
-
-    res.status(201).json({
-      message: "Department created successfully",
-      department: {
-        DepartmentID: department.DepartmentID,
-        DepartmentName: department.DepartmentName,
-        facultyCount: 0
-      }
-    });
-  } catch (error) {
-    console.error("Error adding department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-export const deleteDepartment = async (req, res) => {
-  try {
-    const { departmentId } = req.params;
-
-    // Check if department has faculty
-    const facultyCount = await prisma.faculty.count({
-      where: { DepartmentID: parseInt(departmentId) }
-    });
-
-    if (facultyCount > 0) {
-      return res.status(400).json({ 
-        message: "Cannot delete department with assigned faculty members" 
-      });
-    }
-
-    await prisma.department.delete({
-      where: { DepartmentID: parseInt(departmentId) }
-    });
-
-    res.status(200).json({ message: "Department deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting department:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
 export const approveFaculty = async (req, res) => {
   try {
     const { facultyId } = req.params;

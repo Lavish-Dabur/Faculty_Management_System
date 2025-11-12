@@ -6,7 +6,9 @@ import {
   getDashboardStats,
   getApprovedFaculty,
   getDepartments,
+  getAllDepartments,
   addDepartment,
+  updateDepartment,
   deleteDepartment
 } from "../controller/admin.controller.js";
 
