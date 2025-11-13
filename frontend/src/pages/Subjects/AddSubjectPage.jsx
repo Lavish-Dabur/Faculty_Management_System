@@ -61,7 +61,7 @@ const AddSubjectPage = () => {
       } else {
         await axios.post(`/faculty/subjects/${user.FacultyID}`, subject);
       }
-      navigate('/teaching');
+      navigate('/subjects');
     } catch (error) {
       console.error('Error saving subject:', error);
       setError(error.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'add'} subject`);
@@ -84,7 +84,7 @@ const AddSubjectPage = () => {
     <div className="max-w-4xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex items-center space-x-4 mb-6">
-          <BackButton to="/teaching" />
+          <BackButton to="/subjects" />
           <h1 className="text-2xl font-bold">
             {isEditMode ? 'Edit Subject' : 'Add Subject'}
           </h1>
@@ -128,7 +128,7 @@ const AddSubjectPage = () => {
           <div className="flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => navigate('/teaching')}
+              onClick={() => navigate('/subjects')}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
             >
               Cancel

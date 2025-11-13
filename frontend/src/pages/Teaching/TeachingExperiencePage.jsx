@@ -39,7 +39,7 @@ const TeachingExperiencePage = () => {
           <BackButton to="/dashboard" />
           <h1 className="text-2xl font-bold">Teaching Experience</h1>
         </div>
-        <Link to="/teaching/new">
+        <Link to="/teaching/experience/new">
           <PrimaryButton>Add Teaching Experience</PrimaryButton>
         </Link>
       </div>
@@ -64,9 +64,6 @@ const TeachingExperiencePage = () => {
           ))}
         </div>
       )}
-
-      {/* Subjects Taught Section */}
-      <SubjectsTaughtSection facultyId={user?.FacultyID} />
     </div>
   );
 };
@@ -126,77 +123,6 @@ const ExperienceCard = ({ experience }) => {
             Edit
           </Link>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const SubjectsTaughtSection = ({ facultyId }) => {
-  const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const response = await axios.get(`/faculty/subjects/${facultyId}`);
-        setSubjects(response.data);
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-        setError('Failed to load subjects taught');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (facultyId) {
-      fetchSubjects();
-    }
-  }, [facultyId]);
-
-  if (loading) return <LoadingSpinner />;
-
-  return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Subjects Taught</h2>
-        <Link to="/teaching/subjects/new">
-          <PrimaryButton>Add Subject</PrimaryButton>
-        </Link>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow-sm">
-        {subjects.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-gray-500">No subjects added yet</p>
-            <Link to="/teaching/subjects/new" className="text-blue-500 hover:underline mt-2 inline-block">
-              Add your first subject
-            </Link>
-          </div>
-        ) : (
-          <div className="divide-y">
-            {subjects.map((subject) => (
-              <div key={subject.SubjectTaughtID} className="p-4 flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">{subject.SubjectName}</h3>
-                  <p className="text-sm text-gray-500">Level: {subject.Level}</p>
-                </div>
-                <Link 
-                  to={`/teaching/subjects/edit/${subject.SubjectTaughtID}`}
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  Edit
-                </Link>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

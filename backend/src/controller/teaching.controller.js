@@ -4,7 +4,12 @@ import prisma from "../utils/db.js";
 
 export const addTeachingExperience = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = parseInt(req.params.FacultyID) || req.user?.FacultyID;
+    
+    if (!facultyId) {
+      return res.status(400).json({ message: "Faculty ID is required" });
+    }
+
     const {
       OrganizationName,
       Designation,
@@ -19,11 +24,14 @@ export const addTeachingExperience = async (req, res) => {
       });
     }
 
-    const experience = await prisma.subjectTaught.create({
+    const experience = await prisma.teachingExperience.create({
       data: {
         FacultyID: facultyId,
-        Level: Designation, // Using Designation as Level
-        SubjectName: `${OrganizationName} - ${NatureOfWork || 'Teaching'}`
+        OrganizationName,
+        Designation,
+        StartDate: new Date(StartDate),
+        EndDate: EndDate ? new Date(EndDate) : null,
+        NatureOfWork
       }
     });
 
@@ -36,10 +44,15 @@ export const addTeachingExperience = async (req, res) => {
 
 export const listTeachingExperience = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
-    const experiences = await prisma.subjectTaught.findMany({
+    const facultyId = parseInt(req.params.FacultyID) || req.user?.FacultyID;
+    
+    if (!facultyId) {
+      return res.status(400).json({ message: "Faculty ID is required" });
+    }
+
+    const experiences = await prisma.teachingExperience.findMany({
       where: { FacultyID: facultyId },
-      orderBy: { SubjectTaughtID: "desc" }
+      orderBy: { ExperienceID: "desc" }
     });
 
     res.status(200).json(experiences);
@@ -51,27 +64,32 @@ export const listTeachingExperience = async (req, res) => {
 
 export const updateTeachingExperience = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = req.user?.FacultyID;
     const { experienceId } = req.params;
     const {
       OrganizationName,
       Designation,
+      StartDate,
+      EndDate,
       NatureOfWork
     } = req.body;
 
-    const existing = await prisma.subjectTaught.findUnique({
-      where: { SubjectTaughtID: parseInt(experienceId) }
+    const existing = await prisma.teachingExperience.findUnique({
+      where: { ExperienceID: parseInt(experienceId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing || (facultyId && existing.FacultyID !== facultyId)) {
       return res.status(404).json({ message: "Teaching experience not found" });
     }
 
-    const updated = await prisma.subjectTaught.update({
-      where: { SubjectTaughtID: parseInt(experienceId) },
+    const updated = await prisma.teachingExperience.update({
+      where: { ExperienceID: parseInt(experienceId) },
       data: {
-        Level: Designation || existing.Level,
-        SubjectName: OrganizationName ? `${OrganizationName} - ${NatureOfWork || 'Teaching'}` : existing.SubjectName
+        OrganizationName: OrganizationName || existing.OrganizationName,
+        Designation: Designation || existing.Designation,
+        StartDate: StartDate ? new Date(StartDate) : existing.StartDate,
+        EndDate: EndDate ? new Date(EndDate) : existing.EndDate,
+        NatureOfWork: NatureOfWork || existing.NatureOfWork
       }
     });
 
@@ -84,19 +102,19 @@ export const updateTeachingExperience = async (req, res) => {
 
 export const deleteTeachingExperience = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = req.user?.FacultyID;
     const { experienceId } = req.params;
 
-    const existing = await prisma.subjectTaught.findUnique({
-      where: { SubjectTaughtID: parseInt(experienceId) }
+    const existing = await prisma.teachingExperience.findUnique({
+      where: { ExperienceID: parseInt(experienceId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing || (facultyId && existing.FacultyID !== facultyId)) {
       return res.status(404).json({ message: "Teaching experience not found" });
     }
 
-    await prisma.subjectTaught.delete({
-      where: { SubjectTaughtID: parseInt(experienceId) }
+    await prisma.teachingExperience.delete({
+      where: { ExperienceID: parseInt(experienceId) }
     });
 
     res.status(200).json({ message: "Teaching experience deleted successfully" });
@@ -110,7 +128,12 @@ export const deleteTeachingExperience = async (req, res) => {
 
 export const addSubject = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = parseInt(req.params.FacultyID) || req.user?.FacultyID;
+    
+    if (!facultyId) {
+      return res.status(400).json({ message: "Faculty ID is required" });
+    }
+
     const { SubjectName, Level } = req.body;
 
     if (!SubjectName || !Level) {
@@ -136,7 +159,12 @@ export const addSubject = async (req, res) => {
 
 export const listSubjects = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = parseInt(req.params.FacultyID) || req.user?.FacultyID;
+    
+    if (!facultyId) {
+      return res.status(400).json({ message: "Faculty ID is required" });
+    }
+
     const subjects = await prisma.subjectTaught.findMany({
       where: { FacultyID: facultyId },
       orderBy: { SubjectName: "asc" }
@@ -151,7 +179,7 @@ export const listSubjects = async (req, res) => {
 
 export const updateSubject = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = req.user?.FacultyID;
     const { subjectId } = req.params;
     const { SubjectName, Level } = req.body;
 
@@ -159,7 +187,7 @@ export const updateSubject = async (req, res) => {
       where: { SubjectTaughtID: parseInt(subjectId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing || (facultyId && existing.FacultyID !== facultyId)) {
       return res.status(404).json({ message: "Subject not found" });
     }
 
@@ -180,14 +208,14 @@ export const updateSubject = async (req, res) => {
 
 export const deleteSubject = async (req, res) => {
   try {
-    const facultyId = req.user.FacultyID;
+    const facultyId = req.user?.FacultyID;
     const { subjectId } = req.params;
 
     const existing = await prisma.subjectTaught.findUnique({
       where: { SubjectTaughtID: parseInt(subjectId) }
     });
 
-    if (!existing || existing.FacultyID !== facultyId) {
+    if (!existing || (facultyId && existing.FacultyID !== facultyId)) {
       return res.status(404).json({ message: "Subject not found" });
     }
 

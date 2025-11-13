@@ -3,7 +3,7 @@ import prisma from '../utils/db.js';
 // Get all outreach activities for a faculty member
 export const getFacultyOutreachActivities = async (req, res) => {
     try {
-        const facultyId = parseInt(req.params.facultyId);
+        const facultyId = parseInt(req.params.FacultyID);
         const activities = await prisma.outReachActivities.findMany({
             where: {
                 FacultyID: facultyId
