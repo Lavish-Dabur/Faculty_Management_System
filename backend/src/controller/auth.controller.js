@@ -9,8 +9,9 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "All required fields must be filled" });
     }
     
-    if (role === 'Faculty' && !departmentName) {
-      return res.status(400).json({ message: "Department is required for Faculty role" });
+    // Department is required for all roles except Admin
+    if (role !== 'Admin' && !departmentName) {
+      return res.status(400).json({ message: "Department is required for faculty roles" });
     }
     
     if (password.length < 6) {
@@ -37,7 +38,8 @@ export const signup = async (req, res) => {
       Password: hashedPassword,
     };
     
-    if (role === 'Faculty' && departmentName) {
+    // Connect department for all non-Admin roles
+    if (role !== 'Admin' && departmentName) {
       facultyData.Department = {
         connectOrCreate: {
           where: { DepartmentName: departmentName },
@@ -128,6 +130,26 @@ export const checkAuth = (req, res) => {
     res.status(200).json(req.user);
   } catch (error) {
     console.error("Error in checkAuth controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Public endpoint to get departments for signup page
+export const getPublicDepartments = async (req, res) => {
+  try {
+    const departments = await prisma.department.findMany({
+      select: {
+        DepartmentID: true,
+        DepartmentName: true
+      },
+      orderBy: {
+        DepartmentName: 'asc'
+      }
+    });
+
+    res.status(200).json(departments);
+  } catch (error) {
+    console.error("Error getting public departments:", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

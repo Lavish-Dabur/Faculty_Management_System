@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.store';
 import axios from '../utils/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -26,6 +26,11 @@ const DashboardPage = () => {
     }
   }, [user]);
 
+  // Redirect admins to admin dashboard
+  if (user?.Role === 'Admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -34,84 +39,26 @@ const DashboardPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Faculty Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Welcome back, {user?.FirstName} {user?.LastName}
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-900">Faculty Dashboard</h1>
+          <p className="mt-1 text-gray-600">Welcome, {user?.FirstName}</p>
         </div>
       </div>
-      
-      {/* Overview Stats - First Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <StatCard
-          title="Publications"
-          count={stats?.counts?.publications || 0}
-          link="/publications"
-          addLink="/publications/new"
-        />
-        <StatCard
-          title="Research Projects"
-          count={stats?.counts?.researchProjects || 0}
-          link="/research"
-          addLink="/research/new"
-        />
-        <StatCard
-          title="Patents"
-          count={stats?.counts?.patents || 0}
-          link="/patents"
-          addLink="/patents/new"
-        />
-        <StatCard
-          title="Awards"
-          count={stats?.counts?.awards || 0}
-          link="/awards"
-          addLink="/awards/new"
-        />
-      </div>
 
-      {/* Overview Stats - Second Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Events"
-          count={stats?.counts?.events || 0}
-          link="/events"
-          addLink="/events/new"
-        />
-        <StatCard
-          title="Outreach Activities"
-          count={stats?.counts?.outreachActivities || 0}
-          link="/outreach"
-          addLink="/outreach/new"
-        />
-        <StatCard
-          title="Subjects Taught"
-          count={stats?.counts?.subjectsTaught || 0}
-          link="/teaching"
-          addLink="/teaching/new"
-        />
-        <StatCard
-          title="Qualifications"
-          count={stats?.counts?.qualifications || 0}
-          link="/qualifications"
-          addLink="/qualifications/new"
-        />
-      </div>
+      {/* Minimal action cards: Update Records + View Faculty */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="bg-white rounded-lg p-6 border">
+          <h3 className="text-gray-700 text-sm font-medium">Update Records</h3>
+          <p className="text-gray-500 text-sm mt-2">Edit your profile, qualifications and other records.</p>
+          <div className="mt-4">
+            <Link to="/profile" className="text-indigo-600 hover:underline text-sm">Go to Profile</Link>
+          </div>
+        </div>
 
-      {/* Citation Metrics */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Citation Metrics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-gray-500 text-sm font-medium">h-index</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.hIndex || 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-gray-500 text-sm font-medium">i10-index</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.i10Index || 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-gray-500 text-sm font-medium">Total Citations</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.totalCitations || 0}</p>
+        <div className="bg-white rounded-lg p-6 border">
+          <h3 className="text-gray-700 text-sm font-medium">View Faculty</h3>
+          <p className="text-gray-500 text-sm mt-2">Browse the faculty directory and view profiles.</p>
+          <div className="mt-4">
+            <Link to="/retrieve" className="text-indigo-600 hover:underline text-sm">Open Directory</Link>
           </div>
         </div>
       </div>

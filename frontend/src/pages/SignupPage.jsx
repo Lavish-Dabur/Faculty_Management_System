@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
@@ -16,11 +17,15 @@ const genderOpts = [
 ];
 
 const roleOpts = [
-  {value:'Faculty',label:'Faculty'}, 
+  {value:'Professor',label:'Professor'},
+  {value:'Associate Professor',label:'Associate Professor'},
+  {value:'Assistant Professor',label:'Assistant Professor'},
+  {value:'Lecturer',label:'Lecturer'},
   {value:'Admin',label:'Admin'}
 ];
 
-const SignupPage = ({ navigate, onSignup }) => {
+const SignupPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -30,10 +35,13 @@ const SignupPage = ({ navigate, onSignup }) => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/admin/departments');
+        const response = await fetch('http://localhost:5001/api/auth/departments');
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched departments:', data);
           setDepartments(data);
+        } else {
+          console.error('Failed to fetch departments:', response.status);
         }
       } catch (error) {
         console.error('Error fetching departments:', error);
@@ -112,8 +120,8 @@ const SignupPage = ({ navigate, onSignup }) => {
         phone_no: form.phone_no || ''
       };
       
-      // Only include departmentName for Faculty role
-      if (form.role === 'Faculty') {
+      // Only include departmentName for non-Admin roles
+      if (form.role !== 'Admin') {
         signupData.departmentName = form.departmentName;
       }
       
@@ -215,8 +223,8 @@ const SignupPage = ({ navigate, onSignup }) => {
           options={roleOpts} 
         />
         
-        {/* Department field - only show for Faculty role */}
-        {form.role === 'Faculty' && (
+        {/* Department field - only show for non-Admin roles */}
+        {form.role && form.role !== 'Admin' && (
           <FormInput 
             label="Department" 
             type="select" 

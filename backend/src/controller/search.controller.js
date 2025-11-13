@@ -10,6 +10,8 @@ export const searchFaculty = async (req, res) => {
 
     const faculty = await prisma.faculty.findMany({
       where: {
+        isApproved: true,
+        Role: { not: 'Admin' },
         OR: [
           {
             Name: {

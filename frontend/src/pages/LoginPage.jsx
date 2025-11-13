@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { testConnection } from '../services/api';
 import { useAuth } from '../store/auth.store';
 import FormContainer from '../components/FormContainer';
@@ -108,6 +108,9 @@ const LoginForm = () => {
             onChange={handleChange} 
             error={errors.password} 
           />
+        </div>
+        <div className="form-full-width text-right">
+          <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">Forgot password?</Link>
         </div>
         {errors.submit && (
           <div className="form-full-width">

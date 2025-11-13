@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
+import { useToast } from '../components/Toast';
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
@@ -9,6 +10,7 @@ const ResetPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const showToast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,15 +19,18 @@ const ResetPasswordPage = () => {
       return;
     }
     try {
-      const res = await axios.post(`http://localhost:5001/api/password/reset-password/${token}`, { password });
+      const res = await axios.post(`/password/reset-password/${token}`, { password });
       setMessage(res.data.message);
       setError('');
+      if (showToast) showToast(res.data.message, 'success');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response.data.message);
+      const msg = err?.response?.data?.message || err.message || 'Failed to reset password';
+      setError(msg);
       setMessage('');
+      if (showToast) showToast(msg, 'error');
     }
   };
 

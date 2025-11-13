@@ -155,7 +155,10 @@ export const getFacultyById = async (req, res) => {
 export const getAllFaculty = async (req, res) => {
   try {
     const faculty = await prisma.faculty.findMany({
-      where: { isApproved: true },
+      where: { 
+        isApproved: true,
+        Role: { not: 'Admin' }
+      },
       include: {
         Department: {
           select: {
