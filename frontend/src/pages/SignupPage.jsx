@@ -71,8 +71,27 @@ const SignupPage = ({ navigate, onSignup }) => {
     if (form.role !== 'Admin' && !form.departmentName) {
       errs.departmentName = 'Department is required for Faculty role.';
     }
-    
-    if (!form.dob) errs.dob = 'Date of Birth is required.';
+
+    // Date of birth: required and must be age >= 18
+    if (!form.dob) {
+      errs.dob = 'Date of Birth is required.';
+    } else {
+      const dobDate = new Date(form.dob);
+      const today = new Date();
+      if (isNaN(dobDate.getTime())) {
+        errs.dob = 'Invalid Date of Birth.';
+      } else {
+        let age = today.getFullYear() - dobDate.getFullYear();
+        const m = today.getMonth() - dobDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+          age--;
+        }
+        if (age < 18) {
+          errs.dob = 'DOB must be at least 18 years.';
+        }
+      }
+    }
+
     if (!form.gender) errs.gender = 'Gender is required.';
     
     // Phone number validation - only if provided
@@ -219,15 +238,11 @@ const SignupPage = ({ navigate, onSignup }) => {
         {form.role === 'Faculty' && (
           <FormInput 
             label="Department" 
-            type="select" 
+            type="text" 
             name="departmentName" 
             value={form.departmentName} 
             onChange={handleChange} 
             error={errors.departmentName}
-            options={departments.map(dept => ({
-              value: dept.DepartmentName,
-              label: dept.DepartmentName
-            }))}
           />
         )}
         

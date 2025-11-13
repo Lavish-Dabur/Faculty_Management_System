@@ -39,7 +39,7 @@ const TeachingExperiencePage = () => {
           <BackButton to="/dashboard" />
           <h1 className="text-2xl font-bold">Teaching Experience</h1>
         </div>
-        <Link to="/teaching/new">
+        <Link to="/teaching/experience/new">
           <PrimaryButton>Add Teaching Experience</PrimaryButton>
         </Link>
       </div>

@@ -5,6 +5,7 @@ import {
   rejectFaculty, 
   getDashboardStats,
   getApprovedFaculty,
+  getAllFaculties,
   getDepartments,
   getAllDepartments,
   addDepartment,
@@ -21,6 +22,7 @@ router.use(protectAdminRoute);
 // Faculty management
 router.get("/pending", getPendingRequests);
 router.get("/faculty", getApprovedFaculty);
+router.get("/all-faculties", getAllFaculties);
 router.put("/approve/:facultyId", approveFaculty);
 router.delete("/reject/:facultyId", rejectFaculty);
 

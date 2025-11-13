@@ -70,7 +70,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Overview Stats - Second Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Events"
           count={stats?.counts?.events || 0}
@@ -84,10 +84,16 @@ const DashboardPage = () => {
           addLink="/outreach/new"
         />
         <StatCard
-          title="Subjects Taught"
-          count={stats?.counts?.subjectsTaught || 0}
+          title="Teaching Experience (yrs)"
+          count={stats?.experience?.teachingYears || 0}
           link="/teaching"
           addLink="/teaching/new"
+        />
+        <StatCard
+          title="Subjects Taught"
+          count={stats?.counts?.subjectsTaught || 0}
+          link="/subjects"
+          addLink="/subjects/new"
         />
         <StatCard
           title="Qualifications"

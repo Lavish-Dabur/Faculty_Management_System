@@ -3,7 +3,7 @@ import prisma from '../utils/db.js';
 // Get all events for a faculty member
 export const getFacultyEvents = async (req, res) => {
     try {
-        const facultyId = parseInt(req.params.facultyId);
+        const facultyId = parseInt(req.params.FacultyID);
         const events = await prisma.eventsOrganised.findMany({
             where: {
                 FacultyID: facultyId

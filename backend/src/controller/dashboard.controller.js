@@ -177,7 +177,8 @@ export const getDashboardStats = async (req, res) => {
         awards,
         events,
         outreachActivities,
-        subjectsTaught
+        subjectsTaught,
+        qualifications: qualifications.length
       },
       experience: {
         teachingYears: Math.round(teachingYears * 10) / 10, // Round to 1 decimal place
