@@ -187,11 +187,7 @@ const FacultyProfile = () => {
 
       // Set appropriate Accept header based on format
       const headers = {
-        'Accept': format === 'csv' 
-          ? 'text/csv' 
-          : format === 'excel' 
-          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          : 'application/pdf'
+        'Accept': format === 'pdf' ? 'application/pdf' : 'text/csv'
       };
 
       const response = await fetch(url, { headers });
@@ -216,8 +212,8 @@ const FacultyProfile = () => {
       const link = document.createElement('a');
       link.href = downloadUrl;
       
-      // Set filename with appropriate extension
-      const filename = `${profile.FirstName}_${profile.LastName}_Profile.${format === 'excel' ? 'xlsx' : format}`;
+      // Set filename with appropriate extension (Excel export removed)
+      const filename = `${profile.FirstName}_${profile.LastName}_Profile.${format === 'pdf' ? 'pdf' : 'csv'}`;
       link.download = filename;
       
       document.body.appendChild(link);
@@ -294,12 +290,7 @@ const FacultyProfile = () => {
                   >
                     Export as CSV
                   </button>
-                  <button
-                    onClick={() => handleExportProfile('excel')}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700 font-medium border-b border-gray-100 transition-colors"
-                  >
-                    Export as Excel
-                  </button>
+                  {/* Excel export removed */}
                   <button
                     onClick={() => handleExportProfile('pdf')}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700 font-medium rounded-b-lg transition-colors"

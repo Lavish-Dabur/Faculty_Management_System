@@ -16,11 +16,8 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FM</span>
-            </div>
-            <span className="text-lg font-semibold text-gray-900">Faculty Management</span>
+          <Link to="/" className="flex items-center">
+            <span className="text-lg font-semibold text-gray-900">Faculty Portal</span>
           </Link>
 
           {/* Navigation Links */}
@@ -54,8 +51,8 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link to="/retrieve" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
-                  Faculty Directory
+                <Link to="/" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                  Home
                 </Link>
                 <Link to="/login" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
                   Login

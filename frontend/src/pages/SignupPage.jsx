@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import FormContainer from '../components/FormContainer';
 import FormInput from '../components/FormInput';
@@ -16,11 +17,15 @@ const genderOpts = [
 ];
 
 const roleOpts = [
-  {value:'Faculty',label:'Faculty'}, 
+  {value:'Professor',label:'Professor'},
+  {value:'Associate Professor',label:'Associate Professor'},
+  {value:'Assistant Professor',label:'Assistant Professor'},
+  {value:'Lecturer',label:'Lecturer'},
   {value:'Admin',label:'Admin'}
 ];
 
-const SignupPage = ({ navigate, onSignup }) => {
+const SignupPage = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -30,10 +35,13 @@ const SignupPage = ({ navigate, onSignup }) => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/admin/departments');
+        const response = await fetch('http://localhost:5001/api/auth/departments');
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched departments:', data);
           setDepartments(data);
+        } else {
+          console.error('Failed to fetch departments:', response.status);
         }
       } catch (error) {
         console.error('Error fetching departments:', error);
@@ -71,27 +79,17 @@ const SignupPage = ({ navigate, onSignup }) => {
     if (form.role !== 'Admin' && !form.departmentName) {
       errs.departmentName = 'Department is required for Faculty role.';
     }
-
-    // Date of birth: required and must be age >= 18
+    
     if (!form.dob) {
       errs.dob = 'Date of Birth is required.';
     } else {
-      const dobDate = new Date(form.dob);
+      const selectedDate = new Date(form.dob);
       const today = new Date();
-      if (isNaN(dobDate.getTime())) {
-        errs.dob = 'Invalid Date of Birth.';
-      } else {
-        let age = today.getFullYear() - dobDate.getFullYear();
-        const m = today.getMonth() - dobDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
-          age--;
-        }
-        if (age < 18) {
-          errs.dob = 'DOB must be at least 18 years.';
-        }
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        errs.dob = 'Date of Birth cannot be in the future.';
       }
     }
-
     if (!form.gender) errs.gender = 'Gender is required.';
     
     // Phone number validation - only if provided
@@ -131,8 +129,8 @@ const SignupPage = ({ navigate, onSignup }) => {
         phone_no: form.phone_no || ''
       };
       
-      // Only include departmentName for Faculty role
-      if (form.role === 'Faculty') {
+      // Only include departmentName for non-Admin roles
+      if (form.role !== 'Admin') {
         signupData.departmentName = form.departmentName;
       }
       
@@ -189,7 +187,8 @@ const SignupPage = ({ navigate, onSignup }) => {
           name="dob" 
           value={form.dob} 
           onChange={handleChange} 
-          error={errors.dob} 
+          error={errors.dob}
+          max={new Date().toISOString().split('T')[0]}
         />
         
         {/* Phone Number with character counter */}
@@ -234,8 +233,8 @@ const SignupPage = ({ navigate, onSignup }) => {
           options={roleOpts} 
         />
         
-        {/* Department field - only show for Faculty role */}
-        {form.role === 'Faculty' && (
+        {/* Department field - only show for non-Admin roles */}
+        {form.role && form.role !== 'Admin' && (
           <FormInput 
             label="Department" 
             type="text" 

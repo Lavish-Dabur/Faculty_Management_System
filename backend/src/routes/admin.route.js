@@ -19,7 +19,7 @@ const router = express.Router();
 
 router.use(protectAdminRoute);
 
-// Faculty management
+// Faculty Portal
 router.get("/pending", getPendingRequests);
 router.get("/faculty", getApprovedFaculty);
 router.get("/all-faculties", getAllFaculties);

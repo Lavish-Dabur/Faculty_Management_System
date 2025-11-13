@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -18,8 +17,9 @@ export const exportFilteredData = async (res, data, format, fileName) => {
         console.log('Exporting as CSV');
         return exportAsCSV(res, data, fullFileName);
       case 'excel':
-        console.log('Exporting as Excel');
-        return exportAsExcel(res, data, fullFileName);
+        // Excel export removed; default to CSV to keep downloads working
+        console.log('Excel export requested but removed; defaulting to CSV');
+        return exportAsCSV(res, data, fullFileName);
       case 'pdf':
         console.log('Exporting as PDF');
         return exportAsPDF(res, data, fullFileName);
@@ -58,35 +58,7 @@ function exportAsCSV(res, data, fileName) {
   }
 }
 
-async function exportAsExcel(res, data, fileName) {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Export Data');
-
-
-  const headers = Object.keys(data[0]);
-  worksheet.columns = headers.map(header => ({
-    header: header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1'),
-    key: header,
-    width: 20
-  }));
-
-
-  worksheet.getRow(1).font = { bold: true };
-  worksheet.getRow(1).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' }
-  };
-
-
-  data.forEach(item => worksheet.addRow(item));
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="${fileName}.xlsx"`);
-  res.send(buffer);
-}
+// Excel export removed. If clients request 'excel', CSV will be returned instead.
 
 function exportAsPDF(res, data, fileName) {
   try {

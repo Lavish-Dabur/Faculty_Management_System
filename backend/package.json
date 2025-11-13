@@ -21,7 +21,6 @@
     "debug": "^4.4.3",
     "dotenv": "^17.2.2",
     "ecdsa-sig-formatter": "^1.0.11",
-    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "fill-range": "^7.1.1",
     "glob-parent": "^5.1.2",

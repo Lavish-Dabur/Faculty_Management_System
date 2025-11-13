@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.store';
 import axios from '../utils/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -26,6 +26,11 @@ const DashboardPage = () => {
     }
   }, [user]);
 
+  // Redirect admins to admin dashboard
+  if (user?.Role === 'Admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -34,10 +39,8 @@ const DashboardPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Faculty Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Welcome back, {user?.FirstName} {user?.LastName}
-          </p>
+          <h1 className="text-2xl font-semibold text-gray-900">Faculty Dashboard</h1>
+          <p className="mt-1 text-gray-600">Welcome, {user?.FirstName}</p>
         </div>
       </div>
       
@@ -111,13 +114,13 @@ const DashboardPage = () => {
             <h3 className="text-gray-500 text-sm font-medium">h-index</h3>
             <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.hIndex || 0}</p>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-gray-500 text-sm font-medium">i10-index</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.i10Index || 0}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-gray-500 text-sm font-medium">Total Citations</h3>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.totalCitations || 0}</p>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 border">
+          <h3 className="text-gray-700 text-sm font-medium">View Faculty</h3>
+          <p className="text-gray-500 text-sm mt-2">Browse the faculty directory and view profiles.</p>
+          <div className="mt-4">
+            <Link to="/retrieve" className="text-indigo-600 hover:underline text-sm">Open Directory</Link>
           </div>
         </div>
       </div>

@@ -12,6 +12,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [originalProfile, setOriginalProfile] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -31,6 +32,7 @@ const ProfilePage = () => {
         const response = await axios.get(`/faculty/profile/${user.FacultyID}`);
         console.log('Profile response:', response.data);
         setProfile(response.data);
+        setOriginalProfile(response.data);
         setError('');
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -64,13 +66,44 @@ const ProfilePage = () => {
     setError('');
     setSuccess('');
 
+    // Validate DOB is not in future
+    if (profile.DOB) {
+      const selectedDate = new Date(profile.DOB);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        setError('Date of Birth cannot be in the future.');
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
-      const response = await axios.put(`/faculty/profile/${user?.FacultyID}`, profile);
-      updateUser(response.data);
+      // Only send the fields that can be updated
+      const updateData = {
+        FirstName: profile.FirstName,
+        LastName: profile.LastName,
+        Gender: profile.Gender,
+        DOB: profile.DOB,
+        Phone_no: profile.Phone_no,
+        Role: profile.Role
+      };
+
+      console.log('Sending update data:', updateData);
+      const response = await axios.put(`/faculty/profile/${user?.FacultyID}`, updateData);
+      console.log('Update response:', response.data);
+      
+      // Backend returns { message, faculty }, so we need to use faculty object
+      if (response.data.faculty) {
+        updateUser(response.data.faculty);
+        setProfile(response.data.faculty);
+      }
       setSuccess('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError('Failed to update profile');
+      console.error('Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -167,6 +200,7 @@ const ProfilePage = () => {
               value={profile?.DOB ? new Date(profile.DOB).toISOString().split('T')[0] : ''}
               onChange={handleInputChange}
               required
+              max={new Date().toISOString().split('T')[0]}
             />
 
             <FormInput
@@ -181,7 +215,11 @@ const ProfilePage = () => {
           <div className="flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => setProfile(user)}
+              onClick={() => {
+                setProfile(originalProfile);
+                setError('');
+                setSuccess('');
+              }}
               className="px-4 py-2 text-gray-600 hover:text-gray-800"
             >
               Reset

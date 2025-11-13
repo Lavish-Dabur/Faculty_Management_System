@@ -6,62 +6,86 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  useEffect(() => {
-    console.log('HomePage - Current user:', user);
-    
-    if (user) {
-      const role = user.Role || user.role;
-      console.log('Detected role:', role);
-      
-      if (role === 'Admin') {
-        console.log('Redirecting to /admin');
-        navigate('/admin', { replace: true });
-      } else if (role === 'Faculty') {
-        console.log('Redirecting to /dashboard');
-        navigate('/dashboard', { replace: true });
-      } else {
-        console.log('Unknown role or no role:', role);
-      }
-    }
-  }, [user, navigate]);
+  // Removed auto-redirect to allow viewing homepage
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Hero Section */}
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Faculty Data Management System
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          Faculty Research Portal
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-lg text-gray-600">
           Manage and explore faculty information with ease
         </p>
       </div>
       
       {/* Main Cards */}
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <div className="bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-8 text-white">
-          <div className="text-5xl mb-4">📝</div>
-          <h3 className="text-2xl font-bold mb-3">Update Records</h3>
-          <p className="mb-6 text-indigo-100">
+      <div className="grid md:grid-cols-2 gap-6 mb-16">
+        <div 
+          className="p-10 transition-transform duration-300 hover:scale-105" 
+          style={{
+            backgroundColor: '#4f46e5', 
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-white">Update Records</h3>
+          <p className="mb-8 text-base leading-relaxed" style={{color: '#e0e7ff'}}>
             Add, edit, or modify faculty information and records in the system.
           </p>
           <button 
             onClick={() => navigate(user ? '/dashboard' : '/login')} 
-            className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors"
+            className="px-8 py-3 font-semibold transition-all duration-200"
+            style={{
+              backgroundColor: '#ffffff', 
+              color: '#4f46e5', 
+              borderRadius: '8px',
+              border: '2px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#f9fafb';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#ffffff';
+              e.target.style.transform = 'translateY(0)';
+            }}
           >
             {user ? 'Go to Dashboard' : 'Login to Update'}
           </button>
         </div>
         
-        <div className="bg-linear-to-br from-cyan-500 to-cyan-600 rounded-xl shadow-lg p-8 text-white">
-          <div className="text-5xl mb-4">🔍</div>
-          <h3 className="text-2xl font-bold mb-3">View Faculty</h3>
-          <p className="mb-6 text-cyan-100">
+        <div 
+          className="p-10 transition-transform duration-300 hover:scale-105" 
+          style={{
+            backgroundColor: '#2563eb', 
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          }}
+        >
+          <h3 className="text-2xl font-bold mb-4 text-white">View Faculty</h3>
+          <p className="mb-8 text-base leading-relaxed" style={{color: '#dbeafe'}}>
             Search, browse, and view faculty profiles and information.
           </p>
           <button 
+            type="button"
             onClick={() => navigate('/retrieve')} 
-            className="bg-white text-cyan-600 px-6 py-3 rounded-lg font-semibold hover:bg-cyan-50 transition-colors"
+            className="px-8 py-3 font-semibold transition-all duration-200"
+            style={{
+              backgroundColor: '#ffffff', 
+              color: '#2563eb', 
+              borderRadius: '8px',
+              border: '2px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#f9fafb';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#ffffff';
+              e.target.style.transform = 'translateY(0)';
+            }}
           >
             Browse Faculty
           </button>
@@ -70,20 +94,41 @@ const HomePage = () => {
 
       {/* Features */}
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <div className="text-4xl mb-3">⚡</div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">Fast & Efficient</h4>
-          <p className="text-gray-600">Quick access to all management features</p>
+        <div 
+          className="p-6 transition-all duration-200 hover:translate-y-[-4px]" 
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '10px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <h4 className="font-bold text-gray-900 mb-2 text-lg">Fast & Efficient</h4>
+          <p className="text-gray-600 text-sm leading-relaxed">Quick access to all management features</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <div className="text-4xl mb-3">🔒</div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">Secure Access</h4>
-          <p className="text-gray-600">Protected authentication system</p>
+        <div 
+          className="p-6 transition-all duration-200 hover:translate-y-[-4px]" 
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '10px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <h4 className="font-bold text-gray-900 mb-2 text-lg">Secure Access</h4>
+          <p className="text-gray-600 text-sm leading-relaxed">Protected authentication system</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <div className="text-4xl mb-3">📊</div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-2">Comprehensive Data</h4>
-          <p className="text-gray-600">Complete faculty information overview</p>
+        <div 
+          className="p-6 transition-all duration-200 hover:translate-y-[-4px]" 
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '10px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+          }}
+        >
+          <h4 className="font-bold text-gray-900 mb-2 text-lg">Comprehensive Data</h4>
+          <p className="text-gray-600 text-sm leading-relaxed">Complete faculty information overview</p>
         </div>
       </div>
     </div>

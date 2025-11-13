@@ -80,7 +80,10 @@ export const filterFaculty = async (req, res) => {
 
     console.log('Filter Faculty - Query params:', { department, name, publicationType, researchInterests, format, facultyId });
 
-    const where = { isApproved: true }; // Only show approved faculty
+    const where = { 
+      isApproved: true,
+      Role: { not: 'Admin' } // Exclude admins from faculty listing
+    };
 
     // Handle single faculty export by ID
     if (facultyId) {
@@ -88,9 +91,12 @@ export const filterFaculty = async (req, res) => {
       console.log('Filtering by facultyId:', facultyId);
     }
 
-    // Handle name search
+    // Build OR conditions array for name and department search
+    const orConditions = [];
+
+    // Handle name search - add to OR conditions
     if (name) {
-      where.OR = [
+      orConditions.push(
         {
           FirstName: {
             contains: name,
@@ -108,18 +114,25 @@ export const filterFaculty = async (req, res) => {
             contains: name,
             mode: "insensitive",
           },
-        },
-      ];
+        }
+      );
     }
 
-    // Handle department filter
+    // Handle department filter - add to OR conditions
     if (department && department !== 'all') {
-      where.Department = {
-        DepartmentName: {
-          contains: department,
-          mode: "insensitive",
+      orConditions.push({
+        Department: {
+          DepartmentName: {
+            contains: department,
+            mode: "insensitive",
+          },
         },
-      };
+      });
+    }
+
+    // Apply OR conditions if any exist
+    if (orConditions.length > 0) {
+      where.OR = orConditions;
     }
 
     if (publicationType) {
