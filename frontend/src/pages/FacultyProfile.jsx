@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth.store';
-import { facultyAPI, researchAPI, publicationAPI } from '../services/api';
+import { facultyAPI, researchAPI, publicationAPI, awardsAPI, qualificationsAPI, teachingAPI, eventsAPI, outreachAPI, subjectsAPI } from '../services/api';
 import BackButton from '../components/BackButton';
 
 const FacultyProfile = () => {
@@ -14,70 +14,18 @@ const FacultyProfile = () => {
   const [awards, setAwards] = useState([]);
   const [teachingExperience, setTeachingExperience] = useState([]);
   const [qualifications, setQualifications] = useState([]);
+  const [subjectsTaught, setSubjectsTaught] = useState([]);
+  const [eventsOrganised, setEventsOrganised] = useState([]);
+  const [outreachActivities, setOutreachActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [isOwnProfile, setIsOwnProfile] = useState(true); // Track if viewing own profile
 
-  // Form states for adding new items
-  const [showResearchForm, setShowResearchForm] = useState(false);
-  const [showPublicationForm, setShowPublicationForm] = useState(false);
-  const [showAwardForm, setShowAwardForm] = useState(false);
-  const [showTeachingForm, setShowTeachingForm] = useState(false);
-  const [showQualificationForm, setShowQualificationForm] = useState(false);
+  // Forms removed from profile view (managed in dedicated pages)
 
-  // Form data states
-  const [researchForm, setResearchForm] = useState({
-    title: '',
-    typeID: '',
-    fundingAgency: '',
-    startDate: '',
-    endDate: '',
-    budget: ''
-  });
-
-  const [publicationForm, setPublicationForm] = useState({
-    title: '',
-    typeID: '',
-    publicationYear: '',
-    fundingAgency: '',
-    typeOfIndexing: '',
-    // Journal specific
-    journalName: '',
-    volumeNumber: '',
-    issueNumber: '',
-    issnNumber: '',
-    // Book specific
-    publisher: '',
-    edition: '',
-    volume: '',
-    isbnNumber: '',
-    // Conference specific
-    conferenceLocation: '',
-    pageNumbers: ''
-  });
-
-  const [awardForm, setAwardForm] = useState({
-    awardName: '',
-    awardingBody: '',
-    location: '',
-    yearAwarded: ''
-  });
-
-  const [teachingForm, setTeachingForm] = useState({
-    organizationName: '',
-    designation: '',
-    startDate: '',
-    endDate: '',
-    natureOfWork: ''
-  });
-
-  const [qualificationForm, setQualificationForm] = useState({
-    degree: '',
-    institution: '',
-    yearOfCompletion: ''
-  });
+  // Form data moved to dedicated list/edit pages; removed from profile view
 
   // Publication types from your schema
   const publicationTypes = [
@@ -120,11 +68,16 @@ const FacultyProfile = () => {
       setEditForm(profileData);
 
       if (isViewingOtherProfile) {
-        // When viewing another profile, data is already included in profileData
+        // Use nested relations returned by the public getFacultyById endpoint.
+        // Avoid calling protected endpoints when the viewer is not authenticated.
         setResearchProjects(profileData.ResearchProjects || []);
-        setPublications(profileData.FacultyPublicationLink?.map(link => link.Publication) || []);
+        setPublications(profileData.FacultyPublicationLink || []);
         setAwards(profileData.Awards || []);
-        setTeachingExperience(profileData.SubjectTaught || []);
+        setTeachingExperience(profileData.TeachingExperience || []);
+        setQualifications(profileData.FacultyQualification || []);
+        setSubjectsTaught(profileData.SubjectTaught || []);
+        setEventsOrganised(profileData.EventsOrganised || []);
+        setOutreachActivities(profileData.OutReachActivities || []);
       } else {
         // When viewing own profile, load additional data
         try {
@@ -139,6 +92,48 @@ const FacultyProfile = () => {
           setPublications(publicationsData);
         } catch (error) {
           console.error('Error loading publications:', error);
+        }
+
+        try {
+          const awardsData = await awardsAPI.listAwards();
+          setAwards(awardsData);
+        } catch (error) {
+          console.error('Error loading awards:', error);
+        }
+
+        try {
+          const qualificationsData = await qualificationsAPI.listQualifications();
+          setQualifications(qualificationsData);
+        } catch (error) {
+          console.error('Error loading qualifications:', error);
+        }
+
+        try {
+          const teachingData = await teachingAPI.listExperience();
+          setTeachingExperience(teachingData);
+        } catch (error) {
+          console.error('Error loading teaching experience:', error);
+        }
+
+        try {
+          const eventsData = await eventsAPI.listEvents(user?.FacultyID);
+          setEventsOrganised(eventsData);
+        } catch (error) {
+          console.error('Error loading events:', error);
+        }
+
+        try {
+          const outreachData = await outreachAPI.listActivities(user?.FacultyID);
+          setOutreachActivities(outreachData);
+        } catch (error) {
+          console.error('Error loading outreach activities:', error);
+        }
+
+        try {
+          const subjectsData = await subjectsAPI.listSubjects(user?.FacultyID);
+          setSubjectsTaught(subjectsData);
+        } catch (error) {
+          console.error('Error loading subjects:', error);
         }
       }
 
@@ -167,97 +162,7 @@ const FacultyProfile = () => {
     }
   };
 
-  // Research Project Handlers
-  const handleResearchSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await researchAPI.addProject(user?.FacultyID, researchForm);
-      alert('Research project added successfully!');
-      setShowResearchForm(false);
-      setResearchForm({
-        title: '',
-        typeID: '',
-        fundingAgency: '',
-        startDate: '',
-        endDate: '',
-        budget: ''
-      });
-      loadProfileData(); // Refresh data
-    } catch (error) {
-      alert('Error adding research project: ' + error.message);
-    }
-  };
-
-  const handleResearchChange = (e) => {
-    setResearchForm({
-      ...researchForm,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Publication Handlers
-  const handlePublicationSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await publicationAPI.addPublication(user?.FacultyID, publicationForm);
-      alert('Publication added successfully!');
-      setShowPublicationForm(false);
-      setPublicationForm({
-        title: '',
-        typeID: '',
-        publicationYear: '',
-        fundingAgency: '',
-        typeOfIndexing: '',
-        journalName: '',
-        volumeNumber: '',
-        issueNumber: '',
-        issnNumber: '',
-        publisher: '',
-        edition: '',
-        volume: '',
-        isbnNumber: '',
-        conferenceLocation: '',
-        pageNumbers: ''
-      });
-      loadProfileData(); // Refresh data
-    } catch (error) {
-      alert('Error adding publication: ' + error.message);
-    }
-  };
-
-  const handlePublicationChange = (e) => {
-    setPublicationForm({
-      ...publicationForm,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Award Handlers
-  const handleAwardSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      // You'll need to create an awardsAPI
-      // await awardsAPI.addAward(awardForm);
-      alert('Award added successfully!');
-      setShowAwardForm(false);
-      setAwardForm({
-        awardName: '',
-        awardingBody: '',
-        location: '',
-        yearAwarded: ''
-      });
-      loadProfileData();
-    } catch (error) {
-      alert('Error adding award: ' + error.message);
-    }
-  };
-
-  const handleAwardChange = (e) => {
-    setAwardForm({
-      ...awardForm,
-      [e.target.name]: e.target.value
-    });
-  };
+  // Add/edit handlers moved to dedicated pages; removed from profile view
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
@@ -505,6 +410,66 @@ const FacultyProfile = () => {
           </div>
         </div>
 
+        {/* Add new tabs for Subjects, Events, and Outreach */}
+        <div className="bg-white rounded-xl shadow-lg mb-6 border border-gray-200 overflow-hidden">
+          <div className="flex flex-wrap border-b border-gray-200">
+            <button 
+              className={`flex-1 min-w-fit px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'subjects' 
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab('subjects')}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Subjects
+                <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-semibold">
+                  {subjectsTaught.length}
+                </span>
+              </span>
+            </button>
+            <button 
+              className={`flex-1 min-w-fit px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'events' 
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab('events')}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Events
+                <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-semibold">
+                  {eventsOrganised.length}
+                </span>
+              </span>
+            </button>
+            <button 
+              className={`flex-1 min-w-fit px-6 py-4 text-sm font-medium transition-colors ${
+                activeTab === 'outreach' 
+                  ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab('outreach')}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Outreach
+                <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full text-xs font-semibold">
+                  {outreachActivities.length}
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
@@ -514,10 +479,12 @@ const FacultyProfile = () => {
               </svg>
               Personal Information
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">First Name</label>
-                {editMode ? (
+
+            {editMode ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* keep existing editable inputs when in edit mode */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">First Name</label>
                   <input
                     type="text"
                     name="FirstName"
@@ -525,13 +492,9 @@ const FacultyProfile = () => {
                     onChange={handleEditChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
-                ) : (
-                  <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">{profile?.FirstName}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Last Name</label>
-                {editMode ? (
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Last Name</label>
                   <input
                     type="text"
                     name="LastName"
@@ -539,36 +502,39 @@ const FacultyProfile = () => {
                     onChange={handleEditChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
-                ) : (
-                  <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">{profile?.LastName}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Email</label>
-                <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg flex items-center gap-2">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  {profile?.Email}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Role</label>
-                <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                    {profile?.Role}
-                  </span>
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Department</label>
-                <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">
-                  {profile?.Department?.DepartmentName}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Gender</label>
-                {editMode ? (
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Email</label>
+                  <input
+                    type="email"
+                    name="Email"
+                    value={editForm.Email || ''}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Role</label>
+                  <input
+                    type="text"
+                    name="Role"
+                    value={editForm.Role || ''}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Department</label>
+                  <input
+                    type="text"
+                    name="DepartmentName"
+                    value={editForm.Department?.DepartmentName || ''}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Gender</label>
                   <select
                     name="Gender"
                     value={editForm.Gender || ''}
@@ -579,13 +545,9 @@ const FacultyProfile = () => {
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
-                ) : (
-                  <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">{profile?.Gender}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Date of Birth</label>
-                {editMode ? (
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Date of Birth</label>
                   <input
                     type="date"
                     name="DOB"
@@ -593,15 +555,9 @@ const FacultyProfile = () => {
                     onChange={handleEditChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
-                ) : (
-                  <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg">
-                    {profile?.DOB ? formatDate(profile.DOB) : 'Not set'}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Phone Number</label>
-                {editMode ? (
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Phone Number</label>
                   <input
                     type="tel"
                     name="Phone_no"
@@ -609,16 +565,47 @@ const FacultyProfile = () => {
                     onChange={handleEditChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
-                ) : (
-                  <p className="text-gray-900 text-lg font-medium bg-gray-50 px-4 py-3 rounded-lg flex items-center gap-2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {profile?.Phone_no || 'Not set'}
-                  </p>
-                )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Card-style display similar to Subjects/Events/Outreach */}
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Name</h4>
+                  <p className="text-gray-700 mt-2">{profile?.FirstName} {profile?.LastName}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Email</h4>
+                  <p className="text-gray-700 mt-2">{profile?.Email}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Role</h4>
+                  <p className="text-gray-700 mt-2">{profile?.Role}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Department</h4>
+                  <p className="text-gray-700 mt-2">{profile?.Department?.DepartmentName}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Gender</h4>
+                  <p className="text-gray-700 mt-2">{profile?.Gender || 'Not set'}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Date of Birth</h4>
+                  <p className="text-gray-700 mt-2">{profile?.DOB ? formatDate(profile.DOB) : 'Not set'}</p>
+                </div>
+
+                <div className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900">Phone</h4>
+                  <p className="text-gray-700 mt-2">{profile?.Phone_no || 'Not set'}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -632,128 +619,32 @@ const FacultyProfile = () => {
                 </svg>
                 Research Projects
               </h2>
-              <button 
-                onClick={() => setShowResearchForm(!showResearchForm)}
-                className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg font-medium"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showResearchForm ? "M6 18L18 6M6 6l12 12" : "M12 4v16m8-8H4"} />
-                </svg>
-                {showResearchForm ? 'Cancel' : 'Add Project'}
-              </button>
             </div>
-
-          {/* Add Research Project Form */}
-          {showResearchForm && (
-            <div className="form-card">
-              <h3>Add New Research Project</h3>
-              <form onSubmit={handleResearchSubmit} className="form-grid">
-                <div className="form-field">
-                  <label>Project Title *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={researchForm.title}
-                    onChange={handleResearchChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Project Type *</label>
-                  <select
-                    name="typeID"
-                    value={researchForm.typeID}
-                    onChange={handleResearchChange}
-                    required
-                    className="form-input"
-                  >
-                    <option value="">Select Type</option>
-                    {researchTypes.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-field">
-                  <label>Funding Agency</label>
-                  <input
-                    type="text"
-                    name="fundingAgency"
-                    value={researchForm.fundingAgency}
-                    onChange={handleResearchChange}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Start Date *</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={researchForm.startDate}
-                    onChange={handleResearchChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={researchForm.endDate}
-                    onChange={handleResearchChange}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Budget (₹)</label>
-                  <input
-                    type="number"
-                    name="budget"
-                    value={researchForm.budget}
-                    onChange={handleResearchChange}
-                    className="form-input"
-                    step="0.01"
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="save-button">
-                    💾 Save Project
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowResearchForm(false)}
-                    className="cancel-button"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+            
 
           {/* Research Projects List */}
           {researchProjects.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🔬</div>
-              <h3>No research projects</h3>
-              <p>You haven't added any research projects yet.</p>
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">🔬</div>
+              <h3 className="text-xl font-bold text-gray-900">No research projects</h3>
             </div>
           ) : (
-            <div className="projects-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {researchProjects.map((project) => (
-                <div key={project.ProjectID} className="project-card">
-                  <h4>{project.Title}</h4>
-                  <p><strong>Funding Agency:</strong> {project.FundingAgency || 'Not specified'}</p>
-                  <p><strong>Start Date:</strong> {formatDate(project.StartDate)}</p>
-                  <p><strong>End Date:</strong> {project.EndDate ? formatDate(project.EndDate) : 'Ongoing'}</p>
-                  <p><strong>Budget:</strong> {project.Budget ? `₹${project.Budget}` : 'Not specified'}</p>
-                  <div className="project-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
+                <div key={project.ProjectID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{project.Title}</h4>
+                  <div className="mt-3 text-sm text-gray-700 grid gap-2">
+                    <div><strong>Funding Agency:</strong> {project.FundingAgency || 'Not specified'}</div>
+                    <div><strong>Start Date:</strong> {project.StartDate ? formatDate(project.StartDate) : 'Not set'}</div>
+                    <div><strong>End Date:</strong> {project.EndDate ? formatDate(project.EndDate) : 'Ongoing'}</div>
+                    <div><strong>Budget:</strong> {project.Budget ? `₹${project.Budget}` : 'Not specified'}</div>
                   </div>
+                  {isOwnProfile && (
+                    <div className="mt-4 flex gap-2">
+                      <button className="px-3 py-1 bg-indigo-600 text-white rounded-md">Edit</button>
+                      <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md">Delete</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -763,239 +654,47 @@ const FacultyProfile = () => {
 
       {/* Publications Tab */}
       {activeTab === 'publications' && (
-        <div className="publications-content">
-          <div className="section-header">
-            <h2>Publications</h2>
-            <button 
-              className="add-button" 
-              onClick={() => setShowPublicationForm(!showPublicationForm)}
-            >
-              {showPublicationForm ? '❌ Cancel' : '➕ Add Publication'}
-            </button>
+        <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Publications
+            </h2>
           </div>
-
-          {/* Add Publication Form */}
-          {showPublicationForm && (
-            <div className="form-card">
-              <h3>Add New Publication</h3>
-              <form onSubmit={handlePublicationSubmit} className="form-grid">
-                <div className="form-field">
-                  <label>Publication Title *</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={publicationForm.title}
-                    onChange={handlePublicationChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Publication Type *</label>
-                  <select
-                    name="typeID"
-                    value={publicationForm.typeID}
-                    onChange={handlePublicationChange}
-                    required
-                    className="form-input"
-                  >
-                    <option value="">Select Type</option>
-                    {publicationTypes.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-field">
-                  <label>Publication Year *</label>
-                  <input
-                    type="date"
-                    name="publicationYear"
-                    value={publicationForm.publicationYear}
-                    onChange={handlePublicationChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Funding Agency</label>
-                  <input
-                    type="text"
-                    name="fundingAgency"
-                    value={publicationForm.fundingAgency}
-                    onChange={handlePublicationChange}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Type of Indexing</label>
-                  <input
-                    type="text"
-                    name="typeOfIndexing"
-                    value={publicationForm.typeOfIndexing}
-                    onChange={handlePublicationChange}
-                    className="form-input"
-                    placeholder="SCI, Scopus, Web of Science, etc."
-                  />
-                </div>
-
-                {/* Journal Specific Fields */}
-                {publicationForm.typeID === 'journal' && (
-                  <>
-                    <div className="form-field">
-                      <label>Journal Name</label>
-                      <input
-                        type="text"
-                        name="journalName"
-                        value={publicationForm.journalName}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Volume Number</label>
-                      <input
-                        type="text"
-                        name="volumeNumber"
-                        value={publicationForm.volumeNumber}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Issue Number</label>
-                      <input
-                        type="text"
-                        name="issueNumber"
-                        value={publicationForm.issueNumber}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>ISSN Number</label>
-                      <input
-                        type="text"
-                        name="issnNumber"
-                        value={publicationForm.issnNumber}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Book Specific Fields */}
-                {publicationForm.typeID === 'book' && (
-                  <>
-                    <div className="form-field">
-                      <label>Publisher</label>
-                      <input
-                        type="text"
-                        name="publisher"
-                        value={publicationForm.publisher}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Edition</label>
-                      <input
-                        type="text"
-                        name="edition"
-                        value={publicationForm.edition}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Volume</label>
-                      <input
-                        type="text"
-                        name="volume"
-                        value={publicationForm.volume}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>ISBN Number</label>
-                      <input
-                        type="text"
-                        name="isbnNumber"
-                        value={publicationForm.isbnNumber}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Conference Specific Fields */}
-                {publicationForm.typeID === 'conference' && (
-                  <>
-                    <div className="form-field">
-                      <label>Conference Location</label>
-                      <input
-                        type="text"
-                        name="conferenceLocation"
-                        value={publicationForm.conferenceLocation}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Page Numbers</label>
-                      <input
-                        type="text"
-                        name="pageNumbers"
-                        value={publicationForm.pageNumbers}
-                        onChange={handlePublicationChange}
-                        className="form-input"
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="form-actions">
-                  <button type="submit" className="save-button">
-                    💾 Save Publication
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPublicationForm(false)}
-                    className="cancel-button"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+          
 
           {/* Publications List */}
           {publications.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📚</div>
-              <h3>No publications</h3>
-              <p>You haven't added any publications yet.</p>
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">📚</div>
+              <h3 className="text-xl font-bold text-gray-900">No publication</h3>
             </div>
           ) : (
-            <div className="publications-list">
-              {publications.map((pub) => (
-                <div key={pub.PublicationID} className="publication-card">
-                  <h4>{pub.Publication?.Title}</h4>
-                  <p><strong>Year:</strong> {new Date(pub.Publication?.PublicationYear).getFullYear()}</p>
-                  <p><strong>Type:</strong> {pub.Publication?.Type?.TypeName}</p>
-                  <p><strong>Indexing:</strong> {pub.TypeOfIndexing || 'Not specified'}</p>
-                  <p><strong>Funding Agency:</strong> {pub.Publication?.FundingAgency || 'Not specified'}</p>
-                  <div className="publication-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {publications.map((link) => {
+                const pub = link.Publication || {};
+                let year = '';
+                try { year = pub.PublicationYear ? new Date(pub.PublicationYear).getFullYear() : ''; } catch(e) { year = pub.PublicationYear || ''; }
+                return (
+                  <div key={link.LinkID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                    <h4 className="font-semibold text-gray-900 text-lg">{pub.Title || 'Untitled'}</h4>
+                    <div className="mt-3 text-sm text-gray-700 grid gap-1">
+                      <div><strong>Year:</strong> {year || 'Not specified'}</div>
+                      <div><strong>Type:</strong> {pub.Type?.Type || 'Not specified'}</div>
+                      <div><strong>Indexing:</strong> {link.TypeOfIndexing || 'Not specified'}</div>
+                      <div><strong>Funding Agency:</strong> {pub.FundingAgency || 'Not specified'}</div>
+                    </div>
+                    {isOwnProfile && (
+                      <div className="mt-4 flex gap-2">
+                        <button className="px-3 py-1 bg-indigo-600 text-white rounded-md">Edit</button>
+                        <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md">Delete</button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1005,99 +704,30 @@ const FacultyProfile = () => {
       {activeTab === 'awards' && (
         <div className="awards-content">
           <div className="section-header">
-            <h2>Awards & Recognitions</h2>
-            <button 
-              className="add-button" 
-              onClick={() => setShowAwardForm(!showAwardForm)}
-            >
-              {showAwardForm ? '❌ Cancel' : '➕ Add Award'}
-            </button>
           </div>
-
-          {/* Add Award Form */}
-          {showAwardForm && (
-            <div className="form-card">
-              <h3>Add New Award</h3>
-              <form onSubmit={handleAwardSubmit} className="form-grid">
-                <div className="form-field">
-                  <label>Award Name *</label>
-                  <input
-                    type="text"
-                    name="awardName"
-                    value={awardForm.awardName}
-                    onChange={handleAwardChange}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Awarding Body</label>
-                  <input
-                    type="text"
-                    name="awardingBody"
-                    value={awardForm.awardingBody}
-                    onChange={handleAwardChange}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={awardForm.location}
-                    onChange={handleAwardChange}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Year Awarded *</label>
-                  <input
-                    type="number"
-                    name="yearAwarded"
-                    value={awardForm.yearAwarded}
-                    onChange={handleAwardChange}
-                    required
-                    className="form-input"
-                    min="1900"
-                    max="2030"
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="save-button">
-                    💾 Save Award
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowAwardForm(false)}
-                    className="cancel-button"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
 
           {/* Awards List */}
           {awards.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🏆</div>
-              <h3>No awards</h3>
-              <p>You haven't added any awards yet.</p>
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">🏆</div>
+              <h3 className="text-xl font-bold text-gray-900">No awards</h3>
             </div>
           ) : (
-            <div className="awards-list">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {awards.map((award) => (
-                <div key={award.AwardID} className="award-card">
-                  <h4>{award.AwardName}</h4>
-                  <p><strong>Awarding Body:</strong> {award.AwardingBody || 'Not specified'}</p>
-                  <p><strong>Location:</strong> {award.Location || 'Not specified'}</p>
-                  <p><strong>Year:</strong> {award.YearAwarded}</p>
-                  <div className="award-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
+                <div key={award.AwardID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{award.AwardName}</h4>
+                  <div className="mt-3 text-sm text-gray-700 grid gap-1">
+                    <div><strong>Awarding Body:</strong> {award.AwardingBody || 'Not specified'}</div>
+                    <div><strong>Location:</strong> {award.Location || 'Not specified'}</div>
+                    <div><strong>Year:</strong> {award.YearAwarded || 'Not specified'}</div>
                   </div>
+                  {isOwnProfile && (
+                    <div className="mt-4 flex gap-2">
+                      <button className="px-3 py-1 bg-indigo-600 text-white rounded-md">Edit</button>
+                      <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md">Delete</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1109,87 +739,29 @@ const FacultyProfile = () => {
       {activeTab === 'qualifications' && (
         <div className="qualifications-content">
           <div className="section-header">
-            <h2>Qualifications</h2>
-            <button 
-              className="add-button" 
-              onClick={() => setShowQualificationForm(!showQualificationForm)}
-            >
-              {showQualificationForm ? '❌ Cancel' : '➕ Add Qualification'}
-            </button>
           </div>
-
-          {/* Add Qualification Form */}
-          {showQualificationForm && (
-            <div className="form-card">
-              <h3>Add New Qualification</h3>
-              <form onSubmit={handleAwardSubmit} className="form-grid">
-                <div className="form-field">
-                  <label>Degree *</label>
-                  <input
-                    type="text"
-                    name="degree"
-                    value={qualificationForm.degree}
-                    onChange={(e) => setQualificationForm({...qualificationForm, degree: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Institution *</label>
-                  <input
-                    type="text"
-                    name="institution"
-                    value={qualificationForm.institution}
-                    onChange={(e) => setQualificationForm({...qualificationForm, institution: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Year of Completion *</label>
-                  <input
-                    type="date"
-                    name="yearOfCompletion"
-                    value={qualificationForm.yearOfCompletion}
-                    onChange={(e) => setQualificationForm({...qualificationForm, yearOfCompletion: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="save-button">
-                    💾 Save Qualification
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowQualificationForm(false)}
-                    className="cancel-button"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
 
           {/* Qualifications List */}
           {qualifications.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">🎓</div>
-              <h3>No qualifications</h3>
-              <p>You haven't added any qualifications yet.</p>
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">🎓</div>
+              <h3 className="text-xl font-bold text-gray-900">No qualifications</h3>
             </div>
           ) : (
-            <div className="qualifications-list">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {qualifications.map((qual) => (
-                <div key={qual.QualificationID} className="qualification-card">
-                  <h4>{qual.Degree}</h4>
-                  <p><strong>Institution:</strong> {qual.Institution}</p>
-                  <p><strong>Year:</strong> {new Date(qual.YearOfCompletion).getFullYear()}</p>
-                  <div className="qualification-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
+                <div key={qual.QualificationID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{qual.Degree}</h4>
+                  <div className="mt-3 text-sm text-gray-700 grid gap-1">
+                    <div><strong>Institution:</strong> {qual.Institution || 'Not specified'}</div>
+                    <div><strong>Year:</strong> {qual.YearOfCompletion ? (new Date(qual.YearOfCompletion).getFullYear ? new Date(qual.YearOfCompletion).getFullYear() : qual.YearOfCompletion) : 'Not specified'}</div>
                   </div>
+                  {isOwnProfile && (
+                    <div className="mt-4 flex gap-2">
+                      <button className="px-3 py-1 bg-indigo-600 text-white rounded-md">Edit</button>
+                      <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md">Delete</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1201,108 +773,136 @@ const FacultyProfile = () => {
       {activeTab === 'teaching' && (
         <div className="teaching-content">
           <div className="section-header">
-            <h2>Teaching Experience</h2>
-            <button 
-              className="add-button" 
-              onClick={() => setShowTeachingForm(!showTeachingForm)}
-            >
-              {showTeachingForm ? '❌ Cancel' : '➕ Add Experience'}
-            </button>
+            
           </div>
 
-          {/* Add Teaching Experience Form */}
-          {showTeachingForm && (
-            <div className="form-card">
-              <h3>Add Teaching Experience</h3>
-              <form onSubmit={handleAwardSubmit} className="form-grid">
-                <div className="form-field">
-                  <label>Organization Name *</label>
-                  <input
-                    type="text"
-                    name="organizationName"
-                    value={teachingForm.organizationName}
-                    onChange={(e) => setTeachingForm({...teachingForm, organizationName: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Designation *</label>
-                  <input
-                    type="text"
-                    name="designation"
-                    value={teachingForm.designation}
-                    onChange={(e) => setTeachingForm({...teachingForm, designation: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Start Date *</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={teachingForm.startDate}
-                    onChange={(e) => setTeachingForm({...teachingForm, startDate: e.target.value})}
-                    required
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={teachingForm.endDate}
-                    onChange={(e) => setTeachingForm({...teachingForm, endDate: e.target.value})}
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-field">
-                  <label>Nature of Work</label>
-                  <textarea
-                    name="natureOfWork"
-                    value={teachingForm.natureOfWork}
-                    onChange={(e) => setTeachingForm({...teachingForm, natureOfWork: e.target.value})}
-                    className="form-input"
-                    rows="3"
-                  />
-                </div>
-                <div className="form-actions">
-                  <button type="submit" className="save-button">
-                    💾 Save Experience
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowTeachingForm(false)}
-                    className="cancel-button"
-                  >
-                    ❌ Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+         
 
           {/* Teaching Experience List */}
           {teachingExperience.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📖</div>
-              <h3>No teaching experience</h3>
-              <p>You haven't added any teaching experience yet.</p>
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">📖</div>
+              <h3 className="text-xl font-bold text-gray-900">No teaching experience</h3>
             </div>
           ) : (
-            <div className="teaching-list">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {teachingExperience.map((exp) => (
-                <div key={exp.ExperienceID} className="experience-card">
-                  <h4>{exp.OrganizationName}</h4>
-                  <p><strong>Designation:</strong> {exp.Designation}</p>
-                  <p><strong>Period:</strong> {formatDate(exp.StartDate)} - {exp.EndDate ? formatDate(exp.EndDate) : 'Present'}</p>
-                  <p><strong>Nature of Work:</strong> {exp.NatureOfWork || 'Not specified'}</p>
-                  <div className="experience-actions">
-                    <button className="action-btn edit">Edit</button>
-                    <button className="action-btn delete">Delete</button>
+                <div key={exp.ExperienceID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{exp.OrganizationName}</h4>
+                  <div className="mt-3 text-sm text-gray-700 grid gap-1">
+                    <div><strong>Designation:</strong> {exp.Designation || 'Not specified'}</div>
+                    <div><strong>Period:</strong> {exp.StartDate ? formatDate(exp.StartDate) : 'Not set'} - {exp.EndDate ? formatDate(exp.EndDate) : 'Present'}</div>
+                    <div><strong>Nature of Work:</strong> {exp.NatureOfWork || 'Not specified'}</div>
                   </div>
+                  {isOwnProfile && (
+                    <div className="mt-4 flex gap-2">
+                      <button className="px-3 py-1 bg-indigo-600 text-white rounded-md">Edit</button>
+                      <button className="px-3 py-1 bg-red-100 text-red-700 rounded-md">Delete</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Subjects Taught Tab */}
+      {activeTab === 'subjects' && (
+        <div className="subjects-content bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Subjects Taught
+            </h2>
+          </div>
+          
+
+          {subjectsTaught.length === 0 ? (
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">📖</div>
+              <h3 className="text-xl font-bold text-gray-900">No subjects added</h3>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subjectsTaught.map((subject) => (
+                <div key={subject.SubjectTaughtID} className="bg-linear-to-br from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{subject.SubjectName}</h4>
+                  <p className="text-gray-600 mt-1"><strong>Level:</strong> {subject.Level}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Events Organised Tab */}
+      {activeTab === 'events' && (
+        <div className="events-content bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Events Organised
+            </h2>
+          </div>
+
+          {eventsOrganised.length === 0 ? (
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">🎪</div>
+              <h3 className="text-xl font-bold text-gray-900">No events added</h3>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {eventsOrganised.map((event) => (
+                <div key={event.EventOrganisedID} className="border-l-4 border-indigo-500 bg-indigo-50 p-5 rounded-lg hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{event.Title}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-sm">
+                    <p><strong>Organizer:</strong> {event.Organizer || 'Not specified'}</p>
+                    <p><strong>Location:</strong> {event.Location || 'Not specified'}</p>
+                    <p><strong>Role:</strong> {event.Role || 'Not specified'}</p>
+                    <p><strong>Funding:</strong> {event.FundingAgency || 'Not specified'}</p>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2"><strong>Date Range:</strong> {event.StartDate ? formatDate(event.StartDate) : 'Not set'} - {event.EndDate ? formatDate(event.EndDate) : 'Ongoing'}</p>
+                  {event.Description && <p className="text-sm text-gray-700 mt-2"><strong>Description:</strong> {event.Description}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Outreach Activities Tab */}
+      {activeTab === 'outreach' && (
+        <div className="outreach-content bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Outreach Activities
+            </h2>
+          </div>
+
+          {outreachActivities.length === 0 ? (
+            <div className="empty-state text-center py-12">
+              <div className="empty-icon text-5xl mb-3">🤝</div>
+              <h3 className="text-xl font-bold text-gray-900">No outreach activities</h3>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {outreachActivities.map((activity) => (
+                <div key={activity.ActivityID} className="border-l-4 border-green-500 bg-green-50 p-5 rounded-lg hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 text-lg">{activity.ActivityTitle}</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 text-sm">
+                    <p><strong>Type:</strong> {activity.ActivityType}</p>
+                    <p><strong>Institution:</strong> {activity.InstitutionName || 'Not specified'}</p>
+                    <p><strong>Date:</strong> {formatDate(activity.ActivityDate)}</p>
+                  </div>
+                  {activity.Description && <p className="text-sm text-gray-700 mt-2"><strong>Description:</strong> {activity.Description}</p>}
                 </div>
               ))}
             </div>

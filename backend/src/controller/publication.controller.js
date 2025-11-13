@@ -30,11 +30,20 @@ export const addPublication = async (req, res) => {
       });
     }
 
-    // Create the publication
+    // Validate typeID is one of the publication types
+    const validTypes = ['journal', 'conference', 'book'];
+    if (!validTypes.includes(typeID)) {
+      return res.status(400).json({ 
+        message: "Publication type must be 'journal', 'conference', or 'book'" 
+      });
+    }
+
+    // Always store as 'publication' in the TYPES table
+    // The specific type (journal/conference/book) is determined by which detail table has data
     const publication = await prisma.publications.create({
       data: {
         Title: title,
-        TypeID: typeID,
+        TypeID: 'publication',  // Always 'publication' for all publication types
         PublicationYear: new Date(publicationYear),
         FundingAgency: fundingAgency || null
       }
@@ -50,7 +59,7 @@ export const addPublication = async (req, res) => {
     });
 
     // Add type-specific details based on typeID
-    if (typeID.includes('journal')) {
+    if (typeID === 'journal') {
       await prisma.journalPublicationDetails.create({
         data: {
           PublicationID: publication.PublicationID,
@@ -60,7 +69,7 @@ export const addPublication = async (req, res) => {
           ISSN_Number: issnNumber ? parseInt(issnNumber) : null
         }
       });
-    } else if (typeID.includes('book')) {
+    } else if (typeID === 'book') {
       await prisma.bookPublicationDetails.create({
         data: {
           PublicationID: publication.PublicationID,
@@ -70,7 +79,7 @@ export const addPublication = async (req, res) => {
           ISBN_Number: isbnNumber || null
         }
       });
-    } else if (typeID.includes('conference')) {
+    } else if (typeID === 'conference') {
       await prisma.conferencePaperDetails.create({
         data: {
           PublicationID: publication.PublicationID,

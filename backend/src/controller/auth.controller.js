@@ -42,7 +42,7 @@ export const signup = async (req, res) => {
       Role: role,
       Phone_no: phone_no || "",
       Email: email,
-      isApproved: false, // All new signups require admin approval
+      isApproved: role === 'Admin' ? true : false, // Admin signups are auto-approved
       Password: hashedPassword,
     };
     

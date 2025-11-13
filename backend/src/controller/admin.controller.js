@@ -47,6 +47,28 @@ export const getApprovedFaculty = async (req, res) => {
   }
 };
 
+export const getAllFaculties = async (req, res) => {
+  try {
+    const faculty = await prisma.faculty.findMany({
+      include: {
+        Department: {
+          select: {
+            DepartmentName: true
+          }
+        }
+      },
+      orderBy: {
+        FirstName: 'asc'
+      }
+    });
+
+    res.status(200).json(faculty);
+  } catch (error) {
+    console.error("Error getting all faculties:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export const getDepartments = async (req, res) => {
   try {
     const departments = await prisma.department.findMany({

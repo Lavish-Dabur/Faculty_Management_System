@@ -5,12 +5,17 @@ import PrimaryButton from '../components/PrimaryButton';
 
 const AdminDashboard = ({ user, navigate }) => {
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [allFaculties, setAllFaculties] = useState([]);
+  const [allDepartments, setAllDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('pending');
 
   useEffect(() => {
     loadPendingRequests();
+    loadAllFaculties();
+    loadAllDepartments();
   }, []);
 
   const loadPendingRequests = async () => {
@@ -26,6 +31,24 @@ const AdminDashboard = ({ user, navigate }) => {
       setError('Failed to load pending requests. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAllFaculties = async () => {
+    try {
+      const facultiesData = await adminAPI.getAllFaculties();
+      setAllFaculties(facultiesData);
+    } catch (error) {
+      console.error('Error loading all faculties:', error);
+    }
+  };
+
+  const loadAllDepartments = async () => {
+    try {
+      const departmentsData = await adminAPI.getDepartments();
+      setAllDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error loading departments:', error);
     }
   };
 
@@ -116,7 +139,44 @@ const AdminDashboard = ({ user, navigate }) => {
         </div>
       )}
 
-      {/* Pending Approvals */}
+      {/* Tab Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-4 mb-8 border-b border-gray-200 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'pending'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Pending Approvals ({pendingRequests.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('faculties')}
+            className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'faculties'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            All Faculties ({allFaculties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('departments')}
+            className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${
+              activeTab === 'departments'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            All Departments ({allDepartments.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Pending Approvals Tab */}
+      {activeTab === 'pending' && (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Pending Faculty Approvals</h2>
@@ -206,6 +266,102 @@ const AdminDashboard = ({ user, navigate }) => {
           </div>
         )}
       </div>
+      )}
+
+      {/* All Faculties Tab */}
+      {activeTab === 'faculties' && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">All Faculties</h2>
+          <p className="mt-2 text-gray-600">View complete list of all faculty members</p>
+        </div>
+
+        {allFaculties.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="inline-block bg-blue-100 rounded-full p-6 mb-4">
+              <span className="text-6xl">👥</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">No faculties found</h3>
+            <p className="text-gray-600 text-lg">There are currently no faculty members in the system.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white rounded-2xl shadow-lg">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-indigo-600 text-white">
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Email</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Role</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Department</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allFaculties.map((faculty) => (
+                  <tr key={faculty.FacultyID} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-gray-900 font-medium">{faculty.FirstName} {faculty.LastName}</td>
+                    <td className="px-6 py-4 text-gray-600">{faculty.Email}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                        {faculty.Role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">{faculty.Department?.DepartmentName || 'Not assigned'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+                        faculty.isApproved 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {faculty.isApproved ? '✓ Approved' : '⏳ Pending'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+      )}
+
+      {/* All Departments Tab */}
+      {activeTab === 'departments' && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">All Departments</h2>
+          <p className="mt-2 text-gray-600">View complete list of all departments</p>
+        </div>
+
+        {allDepartments.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+            <div className="inline-block bg-purple-100 rounded-full p-6 mb-4">
+              <span className="text-6xl">🏢</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">No departments found</h3>
+            <p className="text-gray-600 text-lg">There are currently no departments in the system.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {allDepartments.map((dept) => (
+              <div key={dept.DepartmentID} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 border-l-4 border-purple-500">
+                <div className="flex items-start space-x-4">
+                  <div className="bg-purple-100 rounded-lg p-3 flex-shrink-0">
+                    <span className="text-3xl">🏛️</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{dept.DepartmentName}</h3>
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <span className="text-sm">ID: {dept.DepartmentID}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      )}
     </div>
   );
 };

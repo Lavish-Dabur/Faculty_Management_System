@@ -26,7 +26,8 @@ import AddPatentPage from './pages/Patents/AddPatentPage';
 // Teaching
 import TeachingExperiencePage from './pages/Teaching/TeachingExperiencePage';
 import AddTeachingExperiencePage from './pages/Teaching/AddTeachingExperiencePage';
-import AddSubjectPage from './pages/Teaching/AddSubjectPage';
+import AddSubjectPage from './pages/Subjects/AddSubjectPage';
+import SubjectsPage from './pages/Subjects/SubjectsPage';
 
 import AwardsPage from './pages/Awards/AwardsPage';
 import AddAwardPage from './pages/Awards/AddAwardPage';
@@ -91,6 +92,9 @@ const App = () => {
             <Route path="/teaching/experience/edit/:id" element={<AuthGate><AddTeachingExperiencePage /></AuthGate>} />
             <Route path="/teaching/subject/new" element={<AuthGate><AddSubjectPage /></AuthGate>} />
             <Route path="/teaching/subject/edit/:id" element={<AuthGate><AddSubjectPage /></AuthGate>} />
+            <Route path="/subjects" element={<AuthGate><SubjectsPage /></AuthGate>} />
+            <Route path="/subjects/new" element={<AuthGate><AddSubjectPage /></AuthGate>} />
+            <Route path="/subjects/edit/:id" element={<AuthGate><AddSubjectPage /></AuthGate>} />
 
             <Route path="/awards" element={<AuthGate><AwardsPage /></AuthGate>} />
             <Route path="/awards/new" element={<AuthGate><AddAwardPage /></AuthGate>} />

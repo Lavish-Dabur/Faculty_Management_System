@@ -148,10 +148,13 @@ export const getFacultyById = async (req, res) => {
             DepartmentName: true,
           },
         },
-
         SubjectTaught: true,
+        FacultyQualification: true,
         Awards: true,
+        TeachingExperience: true,
         ResearchProjects: true,
+        EventsOrganised: true,
+        OutReachActivities: true,
         FacultyPublicationLink: {
           include: {
             Publication: {

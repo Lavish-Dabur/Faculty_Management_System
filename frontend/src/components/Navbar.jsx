@@ -27,8 +27,10 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
                   Dashboard
                 </Link>
-                <Link to="/profile" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
-                  Profile
+                <Link
+                  to="/profile"
+                  className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">
+                  <span>Profile Details</span>
                 </Link>
                 {user.Role === 'Admin' && (
                   <Link to="/admin" className="text-gray-700 hover:text-indigo-600 font-medium transition-colors">

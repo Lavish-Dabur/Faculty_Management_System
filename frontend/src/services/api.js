@@ -125,6 +125,9 @@ export const adminAPI = {
   getApprovedFaculty: () =>
     apiCall('/admin/faculty'),
 
+  getAllFaculties: () =>
+    apiCall('/admin/all-faculties'),
+
   approveFaculty: (facultyId) =>
     apiCall(`/admin/approve/${facultyId}`, {
       method: 'PUT',
@@ -215,8 +218,10 @@ export const teachingAPI = {
       body: experienceData,
     }),
 
-  listExperience: () =>
-    apiCall('/faculty/teaching'),
+  // listExperience optionally accepts a facultyId. If provided, it fetches
+  // teaching records for that faculty. Otherwise returns the current user's records.
+  listExperience: (facultyId) =>
+    apiCall(facultyId ? `/faculty/teaching/${facultyId}` : '/faculty/teaching'),
 
   updateExperience: (experienceId, experienceData) =>
     apiCall(`/faculty/teaching/${experienceId}`, {
@@ -226,6 +231,78 @@ export const teachingAPI = {
 
   deleteExperience: (experienceId) =>
     apiCall(`/faculty/teaching/${experienceId}`, {
+      method: 'DELETE',
+    }),
+};
+
+// Events API
+export const eventsAPI = {
+  listEvents: (facultyId) =>
+    apiCall(`/faculty/events/${facultyId}`),
+
+  addEvent: (eventData) =>
+    apiCall('/faculty/events', {
+      method: 'POST',
+      body: eventData,
+    }),
+
+  updateEvent: (eventId, eventData) =>
+    apiCall(`/faculty/events/${eventId}`, {
+      method: 'PUT',
+      body: eventData,
+    }),
+
+  deleteEvent: (eventId) =>
+    apiCall(`/faculty/events/${eventId}`, {
+      method: 'DELETE',
+    }),
+
+  getEventTypes: () =>
+    apiCall('/faculty/events/types'),
+};
+
+// Outreach Activities API
+export const outreachAPI = {
+  listActivities: (facultyId) =>
+    apiCall(`/faculty/outreach/${facultyId}`),
+
+  addActivity: (activityData) =>
+    apiCall('/faculty/outreach', {
+      method: 'POST',
+      body: activityData,
+    }),
+
+  updateActivity: (activityId, activityData) =>
+    apiCall(`/faculty/outreach/${activityId}`, {
+      method: 'PUT',
+      body: activityData,
+    }),
+
+  deleteActivity: (activityId) =>
+    apiCall(`/faculty/outreach/${activityId}`, {
+      method: 'DELETE',
+    }),
+};
+
+// Subjects Taught API
+export const subjectsAPI = {
+  listSubjects: (facultyId) =>
+    apiCall(`/faculty/subjects/${facultyId}`),
+
+  addSubject: (subjectData) =>
+    apiCall('/faculty/subjects', {
+      method: 'POST',
+      body: subjectData,
+    }),
+
+  updateSubject: (subjectId, subjectData) =>
+    apiCall(`/faculty/subjects/${subjectId}`, {
+      method: 'PUT',
+      body: subjectData,
+    }),
+
+  deleteSubject: (subjectId) =>
+    apiCall(`/faculty/subjects/${subjectId}`, {
       method: 'DELETE',
     }),
 };

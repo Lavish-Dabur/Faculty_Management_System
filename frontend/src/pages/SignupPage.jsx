@@ -237,15 +237,11 @@ const SignupPage = () => {
         {form.role && form.role !== 'Admin' && (
           <FormInput 
             label="Department" 
-            type="select" 
+            type="text" 
             name="departmentName" 
             value={form.departmentName} 
             onChange={handleChange} 
             error={errors.departmentName}
-            options={departments.map(dept => ({
-              value: dept.DepartmentName,
-              label: dept.DepartmentName
-            }))}
           />
         )}
         

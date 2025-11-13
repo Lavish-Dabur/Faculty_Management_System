@@ -17,23 +17,24 @@ const AddPublicationPage = () => {
   const [publicationType, setPublicationType] = useState('journal');
 
   const [publication, setPublication] = useState({
-    Title: '',
-    PublicationYear: new Date().toISOString().split('T')[0],
-    FundingAgency: '',
-    TypeID: '',
+    title: '',
+    publicationYear: new Date().toISOString().split('T')[0],
+    fundingAgency: '',
+    typeID: '',
+    typeOfIndexing: '',
     // Journal specific
-    JournalName: '',
-    VolumeNumber: '',
-    IssueNumber: '',
-    ISSN_Number: '',
+    journalName: '',
+    volumeNumber: '',
+    issueNumber: '',
+    issnNumber: '',
     // Conference specific
-    ConferencePublisher: '',
-    ConferenceLocation: '',
-    PageNumbers: '',
+    publisher: '',
+    conferenceLocation: '',
+    pageNumbers: '',
     // Book specific
-    BookPublisher: '',
-    Edition: '',
-    ISBN_Number: '',
+    edition: '',
+    volume: '',
+    isbnNumber: '',
   });
 
   useEffect(() => {
@@ -44,23 +45,24 @@ const AddPublicationPage = () => {
 
   const fetchPublicationData = async () => {
     try {
-      const response = await axios.get(`/faculty/publication/single/${id}`);
+      const response = await axios.get(`/publications/${id}`);
       const data = response.data;
       setPublication({
-        Title: data.Title || '',
-        PublicationYear: data.PublicationYear ? new Date(data.PublicationYear).toISOString().split('T')[0] : '',
-        FundingAgency: data.FundingAgency || '',
-        TypeID: data.TypeID || '',
-        JournalName: data.JournalPublicationDetails?.Name || '',
-        VolumeNumber: data.JournalPublicationDetails?.VolumeNumber || '',
-        IssueNumber: data.JournalPublicationDetails?.IssueNumber || '',
-        ISSN_Number: data.JournalPublicationDetails?.ISSN_Number || '',
-        ConferencePublisher: data.ConferencePaperDetails?.Publisher || '',
-        ConferenceLocation: data.ConferencePaperDetails?.Location || '',
-        PageNumbers: data.ConferencePaperDetails?.PageNumbers || '',
-        BookPublisher: data.BookPublicationDetails?.Publisher || '',
-        Edition: data.BookPublicationDetails?.Edition || '',
-        ISBN_Number: data.BookPublicationDetails?.ISBN_Number || '',
+        title: data.Title || '',
+        publicationYear: data.PublicationYear ? new Date(data.PublicationYear).toISOString().split('T')[0] : '',
+        fundingAgency: data.FundingAgency || '',
+        typeID: data.TypeID || '',
+        typeOfIndexing: data.TypeOfIndexing || '',
+        journalName: data.JournalPublicationDetails?.Name || '',
+        volumeNumber: data.JournalPublicationDetails?.VolumeNumber || '',
+        issueNumber: data.JournalPublicationDetails?.IssueNumber || '',
+        issnNumber: data.JournalPublicationDetails?.ISSN_Number || '',
+        publisher: data.ConferencePaperDetails?.Publisher || data.BookPublicationDetails?.Publisher || '',
+        conferenceLocation: data.ConferencePaperDetails?.Location || '',
+        pageNumbers: data.ConferencePaperDetails?.PageNumbers || '',
+        edition: data.BookPublicationDetails?.Edition || '',
+        volume: data.BookPublicationDetails?.VolumeNumber || '',
+        isbnNumber: data.BookPublicationDetails?.ISBN_Number || '',
       });
       if (data.TypeID) setPublicationType(data.TypeID);
     } catch (err) {
@@ -81,44 +83,55 @@ const AddPublicationPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    // Validate required fields
+    if (!publication.title.trim()) {
+      setError('Publication Title is required');
+      return;
+    }
+    if (!publicationType) {
+      setError('Publication Type is required');
+      return;
+    }
+    if (!publication.publicationYear) {
+      setError('Publication Year is required');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // Transform data based on publication type
+      // Transform data - send flat structure as the backend expects
       const formData = {
-        Title: publication.Title,
-        PublicationYear: new Date(publication.PublicationYear),
-        FundingAgency: publication.FundingAgency || null,
-        TypeID: publicationType,
+        title: publication.title,
+        publicationYear: publication.publicationYear,
+        fundingAgency: publication.fundingAgency || '',
+        typeID: publicationType,
+        typeOfIndexing: publication.typeOfIndexing || '',
       };
 
       // Add type-specific details
       if (publicationType === 'journal') {
-        formData.JournalPublicationDetails = {
-          Name: publication.JournalName,
-          VolumeNumber: publication.VolumeNumber,
-          IssueNumber: publication.IssueNumber,
-          ISSN_Number: parseInt(publication.ISSN_Number) || null
-        };
+        formData.journalName = publication.journalName;
+        formData.volumeNumber = publication.volumeNumber;
+        formData.issueNumber = publication.issueNumber;
+        formData.issnNumber = publication.issnNumber;
       } else if (publicationType === 'conference') {
-        formData.ConferencePaperDetails = {
-          Publisher: publication.ConferencePublisher,
-          Location: publication.ConferenceLocation,
-          PageNumbers: publication.PageNumbers
-        };
+        formData.publisher = publication.publisher;
+        formData.conferenceLocation = publication.conferenceLocation;
+        formData.pageNumbers = publication.pageNumbers;
       } else if (publicationType === 'book') {
-        formData.BookPublicationDetails = {
-          Publisher: publication.BookPublisher,
-          Edition: publication.Edition,
-          ISBN_Number: publication.ISBN_Number
-        };
+        formData.publisher = publication.publisher;
+        formData.edition = publication.edition;
+        formData.volume = publication.volume;
+        formData.isbnNumber = publication.isbnNumber;
       }
 
       if (isEditMode) {
-        await axios.put(`/faculty/publication/${id}`, formData);
+        await axios.put(`/publications/${id}`, formData);
       } else {
-        await axios.post(`/faculty/publication/${user.FacultyID}`, formData);
+        await axios.post(`/publications`, formData);
       }
       navigate('/publications');
     } catch (error) {
@@ -159,8 +172,8 @@ const AddPublicationPage = () => {
           <div className="grid grid-cols-1 gap-6">
             <FormInput
               label="Publication Title"
-              name="Title"
-              value={publication.Title}
+              name="title"
+              value={publication.title}
               onChange={handleInputChange}
               required
             />
@@ -183,17 +196,25 @@ const AddPublicationPage = () => {
             <FormInput
               type="date"
               label="Publication Year"
-              name="PublicationYear"
-              value={publication.PublicationYear}
+              name="publicationYear"
+              value={publication.publicationYear}
               onChange={handleInputChange}
               required
             />
 
             <FormInput
               label="Funding Agency"
-              name="FundingAgency"
-              value={publication.FundingAgency}
+              name="fundingAgency"
+              value={publication.fundingAgency}
               onChange={handleInputChange}
+            />
+
+            <FormInput
+              label="Type of Indexing"
+              name="typeOfIndexing"
+              value={publication.typeOfIndexing}
+              onChange={handleInputChange}
+              placeholder="SCI, Scopus, Web of Science, etc."
             />
 
             {/* Type-specific fields */}
@@ -201,27 +222,26 @@ const AddPublicationPage = () => {
               <>
                 <FormInput
                   label="Journal Name"
-                  name="JournalName"
-                  value={publication.JournalName}
+                  name="journalName"
+                  value={publication.journalName}
                   onChange={handleInputChange}
-                  required
                 />
                 <FormInput
                   label="Volume Number"
-                  name="VolumeNumber"
-                  value={publication.VolumeNumber}
+                  name="volumeNumber"
+                  value={publication.volumeNumber}
                   onChange={handleInputChange}
                 />
                 <FormInput
                   label="Issue Number"
-                  name="IssueNumber"
-                  value={publication.IssueNumber}
+                  name="issueNumber"
+                  value={publication.issueNumber}
                   onChange={handleInputChange}
                 />
                 <FormInput
                   label="ISSN Number"
-                  name="ISSN_Number"
-                  value={publication.ISSN_Number}
+                  name="issnNumber"
+                  value={publication.issnNumber}
                   onChange={handleInputChange}
                 />
               </>
@@ -231,21 +251,20 @@ const AddPublicationPage = () => {
               <>
                 <FormInput
                   label="Publisher"
-                  name="ConferencePublisher"
-                  value={publication.ConferencePublisher}
+                  name="publisher"
+                  value={publication.publisher}
                   onChange={handleInputChange}
-                  required
                 />
                 <FormInput
                   label="Location"
-                  name="ConferenceLocation"
-                  value={publication.ConferenceLocation}
+                  name="conferenceLocation"
+                  value={publication.conferenceLocation}
                   onChange={handleInputChange}
                 />
                 <FormInput
                   label="Page Numbers"
-                  name="PageNumbers"
-                  value={publication.PageNumbers}
+                  name="pageNumbers"
+                  value={publication.pageNumbers}
                   onChange={handleInputChange}
                 />
               </>
@@ -255,21 +274,26 @@ const AddPublicationPage = () => {
               <>
                 <FormInput
                   label="Publisher"
-                  name="BookPublisher"
-                  value={publication.BookPublisher}
+                  name="publisher"
+                  value={publication.publisher}
                   onChange={handleInputChange}
-                  required
                 />
                 <FormInput
                   label="Edition"
-                  name="Edition"
-                  value={publication.Edition}
+                  name="edition"
+                  value={publication.edition}
+                  onChange={handleInputChange}
+                />
+                <FormInput
+                  label="Volume"
+                  name="volume"
+                  value={publication.volume}
                   onChange={handleInputChange}
                 />
                 <FormInput
                   label="ISBN Number"
-                  name="ISBN_Number"
-                  value={publication.ISBN_Number}
+                  name="isbnNumber"
+                  value={publication.isbnNumber}
                   onChange={handleInputChange}
                 />
               </>

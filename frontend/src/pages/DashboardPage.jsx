@@ -43,14 +43,76 @@ const DashboardPage = () => {
           <p className="mt-1 text-gray-600">Welcome, {user?.FirstName}</p>
         </div>
       </div>
+      
+      {/* Overview Stats - First Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        <StatCard
+          title="Publications"
+          count={stats?.counts?.publications || 0}
+          link="/publications"
+          addLink="/publications/new"
+        />
+        <StatCard
+          title="Research Projects"
+          count={stats?.counts?.researchProjects || 0}
+          link="/research"
+          addLink="/research/new"
+        />
+        <StatCard
+          title="Patents"
+          count={stats?.counts?.patents || 0}
+          link="/patents"
+          addLink="/patents/new"
+        />
+        <StatCard
+          title="Awards"
+          count={stats?.counts?.awards || 0}
+          link="/awards"
+          addLink="/awards/new"
+        />
+      </div>
 
-      {/* Minimal action cards: Update Records + View Faculty */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className="bg-white rounded-lg p-6 border">
-          <h3 className="text-gray-700 text-sm font-medium">Update Records</h3>
-          <p className="text-gray-500 text-sm mt-2">Edit your profile, qualifications and other records.</p>
-          <div className="mt-4">
-            <Link to="/profile" className="text-indigo-600 hover:underline text-sm">Go to Profile</Link>
+      {/* Overview Stats - Second Row */}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          title="Events"
+          count={stats?.counts?.events || 0}
+          link="/events"
+          addLink="/events/new"
+        />
+        <StatCard
+          title="Outreach Activities"
+          count={stats?.counts?.outreachActivities || 0}
+          link="/outreach"
+          addLink="/outreach/new"
+        />
+        <StatCard
+          title="Teaching Experience (yrs)"
+          count={stats?.experience?.teachingYears || 0}
+          link="/teaching"
+          addLink="/teaching/new"
+        />
+        <StatCard
+          title="Subjects Taught"
+          count={stats?.counts?.subjectsTaught || 0}
+          link="/subjects"
+          addLink="/subjects/new"
+        />
+        <StatCard
+          title="Qualifications"
+          count={stats?.counts?.qualifications || 0}
+          link="/qualifications"
+          addLink="/qualifications/new"
+        />
+      </div>
+
+      {/* Citation Metrics */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Citation Metrics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-gray-500 text-sm font-medium">h-index</h3>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{stats?.citations?.hIndex || 0}</p>
           </div>
         </div>
 
