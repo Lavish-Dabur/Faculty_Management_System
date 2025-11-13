@@ -3,7 +3,11 @@ import prisma from '../utils/db.js';
 // Get all outreach activities for a faculty member
 export const getFacultyOutreachActivities = async (req, res) => {
     try {
-        const facultyId = parseInt(req.params.FacultyID);
+        // Use FacultyID from authenticated user
+        const facultyId = req.user?.FacultyID || parseInt(req.params.FacultyID);
+        
+        console.log('Fetching outreach activities for faculty:', facultyId);
+        
         const activities = await prisma.outReachActivities.findMany({
             where: {
                 FacultyID: facultyId
@@ -12,8 +16,11 @@ export const getFacultyOutreachActivities = async (req, res) => {
                 ActivityDate: 'desc'
             }
         });
+        
+        console.log('Found outreach activities:', activities.length);
         res.json(activities);
     } catch (error) {
+        console.error('Error fetching outreach activities:', error);
         res.status(500).json({ message: "Error fetching outreach activities", error: error.message });
     }
 };

@@ -71,8 +71,8 @@ export const getDashboardStats = async (req, res) => {
         take: 5
       }),
 
-      // Get teaching experience
-      prisma.teachingExperience.findMany({
+      // Get teaching experience (subjects taught)
+      prisma.subjectTaught.findMany({
         where: { FacultyID: parseInt(facultyId) }
       }),
 

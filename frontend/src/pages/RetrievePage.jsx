@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { facultyAPI } from '../services/api';
+import axios from '../utils/axios';
 
 const RetrievePage = () => {
   const navigate = useNavigate();
@@ -102,56 +103,33 @@ const RetrievePage = () => {
       setShowExportMenu(false);
       
       // Build query parameters based on current filters
-      const params = new URLSearchParams();
-      
-      // Add format
-      params.append('format', format);
+      const params = {
+        format: format
+      };
       
       // Add department filter if not 'all'
       if (filterType !== 'all' && filterType !== 'faculty') {
-        params.append('department', filterType);
+        params.department = filterType;
       }
       
       // Add search term if exists
       if (searchTerm) {
-        params.append('name', searchTerm);
+        params.name = searchTerm;
       }
       
-      const exportUrl = `http://localhost:5001/api/filter?${params.toString()}`;
-      console.log('Export URL:', exportUrl);
-      console.log('Export params:', { format, department: filterType, name: searchTerm });
+      console.log('Export params:', params);
       
-      // Make API call to export endpoint
-      const response = await fetch(exportUrl, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/pdf'
-        }
+      // Make API call to export endpoint using axios with responseType blob
+      const response = await axios.get('/filter', {
+        params: params,
+        responseType: 'blob', // Important for file downloads
       });
       
-      console.log('Export response status:', response.status);
-      console.log('Export response type:', response.type);
-      console.log('Export response ok:', response.ok);
-      
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        console.log('Error content-type:', contentType);
-        
-        let errorData;
-        if (contentType && contentType.includes('application/json')) {
-          errorData = await response.json();
-        } else {
-          const text = await response.text();
-          errorData = { message: text || 'Export failed' };
-        }
-        
-        console.error('Export error data:', errorData);
-        throw new Error(errorData.message || 'Export failed');
-      }
+      console.log('Export response:', response.status);
+      console.log('Export response headers:', response.headers);
       
       // Get filename from Content-Disposition header
-      const contentDisposition = response.headers.get('Content-Disposition');
+      const contentDisposition = response.headers['content-disposition'];
       let filename = `faculty_export_${Date.now()}.${format}`;
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
@@ -161,7 +139,7 @@ const RetrievePage = () => {
       }
       
       // Create blob and download
-      const blob = await response.blob();
+      const blob = new Blob([response.data]);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -386,18 +364,23 @@ const RetrievePage = () => {
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-600">
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between gap-4" style={{ overflow: 'visible' }}>
+            <div className="text-sm text-gray-600 flex-shrink-0">
               Showing {filteredFaculty.length} of {faculty.length} faculty members
               {searchTerm && ` • Filtered by: "${searchTerm}"`}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-shrink-0" style={{ position: 'relative', zIndex: 100 }}>
               {/* Export Dropdown */}
               <div className="relative export-dropdown">
                 <button 
-                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Export button clicked, current state:', showExportMenu);
+                    setShowExportMenu(!showExportMenu);
+                  }}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -420,9 +403,9 @@ const RetrievePage = () => {
                   )}
                 </button>
                 
-                {/* Dropdown Menu */}
+                {/* Dropdown Menu - Opens upward */}
                 {showExportMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                  <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-xl border-2 border-gray-300 py-1" style={{ zIndex: 9999 }}>
                     <button
                       onClick={() => {
                         handleExport('csv');

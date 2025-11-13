@@ -60,7 +60,7 @@ const TeachingExperiencePage = () => {
       ) : (
         <div className="grid gap-6">
           {experiences.map((experience) => (
-            <ExperienceCard key={experience.ExperienceID} experience={experience} />
+            <ExperienceCard key={experience.SubjectTaughtID} experience={experience} />
           ))}
         </div>
       )}
@@ -69,55 +69,37 @@ const TeachingExperiencePage = () => {
 };
 
 const ExperienceCard = ({ experience }) => {
-  const formatDate = (date) => {
-    return date ? new Date(date).toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric'
-    }) : 'Present';
-  };
-
-  const calculateDuration = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
-    const months = (end.getFullYear() - start.getFullYear()) * 12 + 
-                  end.getMonth() - start.getMonth();
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
-    
-    let duration = '';
-    if (years > 0) duration += `${years} year${years > 1 ? 's' : ''}`;
-    if (remainingMonths > 0) {
-      if (duration) duration += ' ';
-      duration += `${remainingMonths} month${remainingMonths > 1 ? 's' : ''}`;
-    }
-    return duration;
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold">{experience.Designation}</h3>
-          <p className="text-gray-600 mt-1">{experience.OrganizationName}</p>
-          
-          <div className="mt-2">
-            <p className="text-sm text-gray-500">
-              {formatDate(experience.StartDate)} - {formatDate(experience.EndDate)}
-              <span className="mx-2">•</span>
-              {calculateDuration(experience.StartDate, experience.EndDate)}
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold">{experience.SubjectName}</h3>
+          <div className="mt-2 space-y-1">
+            <p className="text-gray-600">
+              <span className="font-medium">Level:</span> {experience.Level}
             </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Academic Year:</span> {experience.AcademicYear}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Semester:</span> {experience.Semester}
+            </p>
+            {experience.SubjectCode && (
+              <p className="text-gray-600">
+                <span className="font-medium">Subject Code:</span> {experience.SubjectCode}
+              </p>
+            )}
+            {experience.Credits && (
+              <p className="text-gray-600">
+                <span className="font-medium">Credits:</span> {experience.Credits}
+              </p>
+            )}
           </div>
-
-          {experience.NatureOfWork && (
-            <p className="text-sm text-gray-600 mt-2">
-              {experience.NatureOfWork}
-            </p>
-          )}
         </div>
         
         <div className="flex gap-2">
           <Link 
-            to={`/teaching/edit/${experience.ExperienceID}`}
+            to={`/teaching/edit/${experience.SubjectTaughtID}`}
             className="text-blue-500 hover:text-blue-600"
           >
             Edit
