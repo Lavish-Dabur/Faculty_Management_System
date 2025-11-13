@@ -80,7 +80,16 @@ const SignupPage = () => {
       errs.departmentName = 'Department is required for Faculty role.';
     }
     
-    if (!form.dob) errs.dob = 'Date of Birth is required.';
+    if (!form.dob) {
+      errs.dob = 'Date of Birth is required.';
+    } else {
+      const selectedDate = new Date(form.dob);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        errs.dob = 'Date of Birth cannot be in the future.';
+      }
+    }
     if (!form.gender) errs.gender = 'Gender is required.';
     
     // Phone number validation - only if provided
@@ -178,7 +187,8 @@ const SignupPage = () => {
           name="dob" 
           value={form.dob} 
           onChange={handleChange} 
-          error={errors.dob} 
+          error={errors.dob}
+          max={new Date().toISOString().split('T')[0]}
         />
         
         {/* Phone Number with character counter */}

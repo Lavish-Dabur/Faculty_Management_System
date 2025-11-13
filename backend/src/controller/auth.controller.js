@@ -18,6 +18,14 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
+    // Validate DOB is not in the future
+    const dobDate = new Date(dob);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dobDate > today) {
+      return res.status(400).json({ message: "Date of Birth cannot be in the future" });
+    }
+
     const existingFaculty = await prisma.faculty.findUnique({ where: { Email: email } });
     if (existingFaculty) {
       return res.status(400).json({ message: "Email already exists" });
